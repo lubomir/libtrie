@@ -1,0 +1,4 @@
+*.swp
+*.o
+*.dep
+list-ignore
