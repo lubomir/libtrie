@@ -1,4 +1,5 @@
 *.swp
 *.o
 *.dep
-list-ignore
+list-compile
+list-query
