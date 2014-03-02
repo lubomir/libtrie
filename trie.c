@@ -9,6 +9,8 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
+#define VERSION 1
+
 #define INIT_SIZE 4096
 
 #define FULL_CHUNK_BYTE_SIZE 64
@@ -34,6 +36,7 @@ struct trie_node {
 };
 
 struct trie {
+    int version;
     TrieNode *node_list;
     size_t len;
     size_t idx;
@@ -227,6 +230,10 @@ Trie * trie_load(const char *filename)
     }
 
     memcpy(trie, mem, sizeof *trie);
+    if (trie->version != VERSION) {
+        fprintf(stderr, "Bad version\n");
+        return NULL;
+    }
     trie->node_list = (TrieNode *) ((char *)mem + sizeof *trie);
     trie->data = (char *)mem + sizeof trie->node_list[0] * trie->idx + sizeof *trie;
     trie->file_len = info.st_size;
