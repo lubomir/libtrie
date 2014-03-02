@@ -217,27 +217,33 @@ Trie * trie_load(const char *filename)
     }
 
     void *mem = mmap(NULL, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+
     if (!mem) {
         perror("mmap");
         return NULL;
     }
 
-    close(fd);
-
     Trie *trie = malloc(sizeof *trie);
     if (!trie) {
         perror("malloc");
-        return NULL;
+        goto err1;
     }
 
     memcpy(trie, mem, sizeof *trie);
     if (trie->version != VERSION) {
         fprintf(stderr, "Bad version\n");
-        return NULL;
+        goto err2;
     }
     trie->nodes = (TrieNode *) ((char *)mem + sizeof *trie);
     trie->data = (char *)mem + sizeof trie->nodes[0] * trie->idx + sizeof *trie;
     trie->file_len = info.st_size;
     trie->base_mem = mem;
     return trie;
+
+err2:
+    free(trie);
+err1:
+    munmap(mem, info.st_size);
+    return NULL;
 }
