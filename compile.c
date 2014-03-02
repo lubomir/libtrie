@@ -4,12 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-char * str_dup(const char *c)
-{
-    char *copy = malloc(strlen(c)+1);
-    return strcpy(copy, c);
-}
-
 static Trie * load_data(FILE *fh)
 {
     char *line = NULL;
@@ -17,14 +11,18 @@ static Trie * load_data(FILE *fh)
     Trie *trie = trie_new();
 
     while (getline(&line, &len, fh) > 0) {
+        char *pch = strchr(line, '\n');
+        *pch = 0;
         if (strlen(line) <= 1)
             continue;
-        char *key = line;
-        char *val = strtok(line, ":");
+        char *key = strtok(line, ":");
+        char *val = strtok(NULL, "\n");
         if (!val)
             continue;
-        trie_insert(trie, key, str_dup(val));
+        trie_insert(trie, key, val);
     }
+
+    free(line);
 
     return trie;
 }
@@ -42,8 +40,11 @@ int main(int argc, char *argv[])
     }
 
     Trie *trie = load_data(infile);
-
     fclose(infile);
+
+    trie_serialize(trie, argv[2]);
+
+    trie_free(trie);
 
     return 0;
 }
