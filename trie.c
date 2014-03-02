@@ -70,6 +70,7 @@ static size_t node_alloc(Trie *t, int is_inline)
 Trie * trie_new(void)
 {
     struct trie *t = calloc(sizeof *t, 1);
+    t->version = VERSION;
     t->node_list = calloc(sizeof t->node_list[0], INIT_SIZE);
     t->len = INIT_SIZE;
     t->idx = 1;
