@@ -3,12 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static Trie * load_data(FILE *fh)
 {
     char *line = NULL;
     size_t len = 0;
     Trie *trie = trie_new();
+    unsigned count = 0;
 
     while (getline(&line, &len, fh) > 0) {
         char *pch = strchr(line, '\n');
@@ -20,7 +22,15 @@ static Trie * load_data(FILE *fh)
         if (!val)
             continue;
         trie_insert(trie, key, val);
+        if (isatty(STDOUT_FILENO) && (++count % 1000) == 0) {
+            printf("\rInserted %u items", count);
+        }
     }
+
+    if (isatty(STDOUT_FILENO)) {
+        putchar('\r');
+    }
+    printf("Inserted %u items\n", count);
 
     free(line);
 
