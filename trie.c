@@ -20,6 +20,12 @@
 #define FIRST_CHUNK_LEN 5
 #define GET_CHUNK_SIZE(c) ((c)->is_inline ? FIRST_CHUNK_LEN : FULL_CHUNK_LEN)
 
+typedef struct {
+    size_t len;
+    size_t used;
+    char data[1];
+} String;
+
 typedef struct trie_node TrieNode;
 
 typedef struct trie_node_chunk {
@@ -33,7 +39,10 @@ typedef struct trie_node_chunk {
 
 struct trie_node {
     TrieNodeChunk chunk;
-    size_t data;
+    union {
+        size_t offset;
+        String *string;
+    } data;
 };
 
 struct trie {
@@ -91,24 +100,37 @@ void trie_free(Trie *trie)
         munmap(trie->base_mem, trie->file_len);
         free(trie);
     } else {
+        for (size_t idx = 1; idx < trie->idx; ++idx) {
+            free(trie->nodes[idx].data.string);
+        }
         free(trie->nodes);
         free(trie->data);
         free(trie);
     }
 }
 
-static size_t insert_data(Trie *trie, const char *data)
+static void insert_data(Trie *trie, TrieNode *node, const char *data)
 {
-    size_t len = strlen(data) + 1;
-    if (trie->data_idx + len >= trie->data_len) {
-        trie->data_len *= 2;
-        trie->data = realloc(trie->data, trie->data_len);
+    assert(trie->base_mem == NULL);
+
+    size_t len = strlen(data);
+
+    if (node->data.string == NULL) {
+        node->data.string = calloc(256, 1);
+        node->data.string->len = 256;
     }
-    size_t idx = trie->data_idx;
-    strcpy(trie->data + trie->data_idx, data);
-    trie->data[trie->data_idx + len - 1] = 0;
-    trie->data_idx += len;
-    return idx;
+
+    if (node->data.string->used + len + 1 >= node->data.string->len - 16) {
+        node->data.string->len *= 2;
+        String *tmp = realloc(node->data.string, node->data.string->len);
+        node->data.string = tmp;
+    }
+
+    if (node->data.string->used > 0) {
+        node->data.string->data[node->data.string->used++] = '\n';
+    }
+    strcpy(node->data.string->data + node->data.string->used, data);
+    node->data.string->used += len;
 }
 
 #define CHUNK(x) ((TrieNodeChunk*)(&x))
@@ -133,10 +155,7 @@ static size_t find_or_create_node(Trie *trie, size_t current, char key)
     }
 
     size_t new_idx = node_alloc(trie, 1);
-    trie->nodes[new_idx].data = 0;
     trie->nodes[new_idx].chunk.is_inline = 1;
-    trie->nodes[new_idx].chunk.size = 0;
-    trie->nodes[new_idx].chunk.next = 0;
 
     TrieNodeChunk *last_chunk = &trie->nodes[last].chunk;
     if (last_chunk->size < GET_CHUNK_SIZE(last_chunk)) {
@@ -164,7 +183,7 @@ void trie_insert(Trie *trie, const char *key, const char *value)
         current = find_or_create_node(trie, current, *key);
         ++key;
     }
-    trie->nodes[current].data = insert_data(trie, value);
+    insert_data(trie, trie->nodes + current, value);
 }
 
 static size_t find_trie_node(Trie *trie, size_t current, char key)
@@ -191,7 +210,36 @@ char * trie_lookup(Trie *trie, const char *key)
         current = find_trie_node(trie, current, *key++);
     }
     assert(current < trie->idx);
-    return current == 0 ? NULL : trie->data + trie->nodes[current].data;
+    if (current == 0) {
+        return NULL;
+    }
+    if (trie->base_mem) {
+        return trie->data + trie->nodes[current].data.offset;
+    } else {
+        return trie->nodes[current].data.string->data;
+    }
+}
+
+static void trie_consolidate(Trie *trie)
+{
+    assert(trie->base_mem == NULL);
+    for (size_t idx = 1; idx < trie->idx; ++idx) {
+        if (!trie->nodes[idx].chunk.is_inline ||
+                trie->nodes[idx].data.string == NULL) {
+            /* Non-inline chunks have no data */
+            continue;
+        }
+        char *str = trie->nodes[idx].data.string->data;
+        size_t len = trie->nodes[idx].data.string->used;
+        if (trie->data_idx + len >= trie->data_len) {
+            trie->data_len *= 2;
+            trie->data = realloc(trie->data, trie->data_len);
+        }
+        strcpy(trie->data + trie->data_idx, str);
+        trie->data[trie->data_idx + len] = 0;
+        trie->nodes[idx].data.offset = trie->data_idx;
+        trie->data_idx += len + 1;
+    }
 }
 
 void trie_serialize(Trie *trie, const char *filename)
@@ -201,6 +249,7 @@ void trie_serialize(Trie *trie, const char *filename)
         perror("Failed to open output file");
         return;
     }
+    trie_consolidate(trie);
     fwrite(trie, sizeof *trie, 1, fh);
     fwrite(trie->nodes, sizeof *trie->nodes, trie->idx, fh);
     fwrite(trie->data, 1, trie->data_idx, fh);
