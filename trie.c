@@ -1,5 +1,6 @@
 #include "trie.h"
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -118,6 +119,7 @@ static size_t insert_data(Trie *trie, const char *data)
 static size_t find_or_create_node(Trie *trie, size_t current, char key)
 {
     size_t last = 0;
+    assert(current < trie->idx);
     for (size_t chunk_idx = current;
             chunk_idx > 0 && chunk_idx < trie->idx;
             chunk_idx = CHUNK(trie->nodes[chunk_idx])->next) {
@@ -150,6 +152,7 @@ static size_t find_or_create_node(Trie *trie, size_t current, char key)
         next->keys[0] = key;
         next->values[0] = new_idx;
     }
+    assert(new_idx < trie->idx);
     return new_idx;
 }
 
@@ -166,6 +169,7 @@ void trie_insert(Trie *trie, const char *key, const char *value)
 
 static size_t find_trie_node(Trie *trie, size_t current, char key)
 {
+    assert(current < trie->idx);
     for (size_t chunk_idx = current;
             chunk_idx > 0 && chunk_idx < trie->idx;
             chunk_idx = trie->nodes[chunk_idx].chunk.next) {
@@ -186,6 +190,7 @@ char * trie_lookup(Trie *trie, const char *key)
     while (*key && current < trie->idx) {
         current = find_trie_node(trie, current, *key++);
     }
+    assert(current < trie->idx);
     return current == 0 ? NULL : trie->data + trie->nodes[current].data;
 }
 
