@@ -1,5 +1,6 @@
 #include "trie.h"
 
+#include <limits.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -9,6 +10,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 #define VERSION 1
 
@@ -16,8 +18,8 @@
 
 #define FULL_CHUNK_BYTE_SIZE 64
 #define FIRST_CHUNK_BYTE_SIZE 56
-#define FULL_CHUNK_LEN 6
-#define FIRST_CHUNK_LEN 5
+#define FULL_CHUNK_LEN 3
+#define FIRST_CHUNK_LEN 2
 #define GET_CHUNK_SIZE(c) ((c)->is_inline ? FIRST_CHUNK_LEN : FULL_CHUNK_LEN)
 
 typedef struct {
@@ -26,21 +28,23 @@ typedef struct {
     char data[1];
 } String;
 
+typedef uint32_t ChunkId;
+typedef size_t DataId;
 typedef struct trie_node TrieNode;
 
 typedef struct trie_node_chunk {
-    size_t next;
+    ChunkId next;
     bool is_inline : 1;
     unsigned int size : 7;
     char keys[FULL_CHUNK_LEN];
-    size_t values[FIRST_CHUNK_LEN];
+    ChunkId values[FIRST_CHUNK_LEN];
 } TrieNodeChunk;
 
 
 struct trie_node {
     TrieNodeChunk chunk;
     union {
-        size_t offset;
+        DataId offset;
         String *string;
     } data;
 };
@@ -60,7 +64,7 @@ struct trie {
 };
 
 
-static size_t node_alloc(Trie *t, int is_inline)
+static ChunkId node_alloc(Trie *t, int is_inline)
 {
     if (t->idx >= t->len) {
         t->len *= 2;
@@ -74,6 +78,7 @@ static size_t node_alloc(Trie *t, int is_inline)
     }
     memset(&t->nodes[t->idx], 0, sizeof t->nodes[t->idx]);
     t->nodes[t->idx].chunk.is_inline = is_inline;
+    assert(t->idx < UINT32_MAX - 1);
     return t->idx++;
 }
 
@@ -135,11 +140,11 @@ static void insert_data(Trie *trie, TrieNode *node, const char *data)
 /**
  * The `current` node is always in the trie.
  */
-static size_t find_or_create_node(Trie *trie, size_t current, char key)
+static ChunkId find_or_create_node(Trie *trie, ChunkId current, char key)
 {
-    size_t last = 0;
+    ChunkId last = 0;
     assert(current < trie->idx);
-    for (size_t chunk_idx = current;
+    for (ChunkId chunk_idx = current;
             chunk_idx > 0 && chunk_idx < trie->idx;
             chunk_idx = CHUNK(trie->nodes[chunk_idx])->next) {
         TrieNodeChunk *chunk = CHUNK(trie->nodes[chunk_idx]);
@@ -151,7 +156,7 @@ static size_t find_or_create_node(Trie *trie, size_t current, char key)
         last = chunk_idx;
     }
 
-    size_t new_idx = node_alloc(trie, 1);
+    ChunkId new_idx = node_alloc(trie, 1);
     trie->nodes[new_idx].chunk.is_inline = 1;
 
     TrieNodeChunk *last_chunk = &trie->nodes[last].chunk;
@@ -159,7 +164,7 @@ static size_t find_or_create_node(Trie *trie, size_t current, char key)
         last_chunk->values[last_chunk->size] = new_idx;
         last_chunk->keys[last_chunk->size++] = key;
     } else {
-        size_t continuation = node_alloc(trie, 0);
+        ChunkId continuation = node_alloc(trie, 0);
         last_chunk = &trie->nodes[last].chunk;
         last_chunk->next = continuation;
         TrieNodeChunk *next = &trie->nodes[continuation].chunk;
@@ -174,7 +179,7 @@ static size_t find_or_create_node(Trie *trie, size_t current, char key)
 
 void trie_insert(Trie *trie, const char *key, const char *value)
 {
-    size_t current = 1;
+    ChunkId current = 1;
 
     while (*key) {
         current = find_or_create_node(trie, current, *key);
@@ -183,10 +188,10 @@ void trie_insert(Trie *trie, const char *key, const char *value)
     insert_data(trie, trie->nodes + current, value);
 }
 
-static size_t find_trie_node(Trie *trie, size_t current, char key)
+static ChunkId find_trie_node(Trie *trie, ChunkId current, char key)
 {
     assert(current < trie->idx);
-    for (size_t chunk_idx = current;
+    for (ChunkId chunk_idx = current;
             chunk_idx > 0 && chunk_idx < trie->idx;
             chunk_idx = trie->nodes[chunk_idx].chunk.next) {
         TrieNodeChunk *chunk = &trie->nodes[chunk_idx].chunk;
@@ -201,7 +206,7 @@ static size_t find_trie_node(Trie *trie, size_t current, char key)
 
 char * trie_lookup(Trie *trie, const char *key)
 {
-    size_t current = 1;
+    ChunkId current = 1;
 
     while (*key && current < trie->idx) {
         current = find_trie_node(trie, current, *key++);
@@ -220,7 +225,7 @@ char * trie_lookup(Trie *trie, const char *key)
 static void trie_consolidate(Trie *trie)
 {
     assert(trie->base_mem == NULL);
-    for (size_t idx = 1; idx < trie->idx; ++idx) {
+    for (ChunkId idx = 1; idx < trie->idx; ++idx) {
         if (!trie->nodes[idx].chunk.is_inline ||
                 trie->nodes[idx].data.string == NULL) {
             /* Non-inline chunks have no data */

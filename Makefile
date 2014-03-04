@@ -1,7 +1,7 @@
 SRCS=compile.c trie.c query.c
 
 CC=gcc
-CFLAGS=-Wall -Wextra -g -pedantic -std=gnu99
+CFLAGS=-Wall -Wextra -pedantic -std=gnu99 -O2
 LDFLAGS=
 DEPS=$(SRCS:.c=.dep)
 
