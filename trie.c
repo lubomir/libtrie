@@ -100,9 +100,6 @@ void trie_free(Trie *trie)
         munmap(trie->base_mem, trie->file_len);
         free(trie);
     } else {
-        for (size_t idx = 1; idx < trie->idx; ++idx) {
-            free(trie->nodes[idx].data.string);
-        }
         free(trie->nodes);
         free(trie->data);
         free(trie);
@@ -236,6 +233,7 @@ static void trie_consolidate(Trie *trie)
             trie->data = realloc(trie->data, trie->data_len);
         }
         strcpy(trie->data + trie->data_idx, str);
+        free(trie->nodes[idx].data.string);
         trie->data[trie->data_idx + len] = 0;
         trie->nodes[idx].data.offset = trie->data_idx;
         trie->data_idx += len + 1;
