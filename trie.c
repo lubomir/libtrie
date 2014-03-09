@@ -32,6 +32,7 @@ typedef struct {
     char key;
 } __attribute__((__packed__)) TrieNodeChunk;
 
+static_assert(sizeof(TrieNodeChunk) == 9, "TrieNodeChunk has wrong size");
 
 typedef struct {
     ChunkId chunk;
@@ -40,6 +41,8 @@ typedef struct {
         String *string;
     } data;
 } TrieNode;
+
+static_assert(sizeof(TrieNode) == 12, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;
