@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 3
+#define VERSION 4
 
 #define INIT_SIZE 4096
 
