@@ -1,7 +1,7 @@
 SRCS=compile.c trie.c query.c
 
 CC=gcc
-CFLAGS=-Wall -Wextra -pedantic -std=gnu99 -O2
+CFLAGS=-Wall -Wextra -pedantic -std=gnu99 -O2 -fPIC
 LDFLAGS=
 DEPS=$(SRCS:.c=.dep)
 
@@ -11,13 +11,16 @@ else
 cmd = @printf " %s\t%s\n" $2 $3; $1
 endif
 
-all : list-compile list-query
+all : list-compile list-query libtrie.so
 
 list-compile : compile.o trie.o
 	$(call cmd,$(CC) $^ -o $@ $(LDFLAGS),CCLD,$@)
 
 list-query : query.o trie.o
 	$(call cmd,$(CC) $^ -o $@ $(LDFLAGS),CCLD,$@)
+
+libtrie.so : trie.o
+	$(call cmd,$(CC) $^ -o $@ -shared,CCLD,$@)
 
 %.o : %.c
 	$(call cmd,$(CC) $(CFLAGS) -c -o $@ $<,CC,$@)
