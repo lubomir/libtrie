@@ -148,8 +148,6 @@ static void insert_data(Trie *trie, TrieNode *node, const char *data)
     node->data.string->used += len;
 }
 
-#define CHUNK(x) ((TrieNodeChunk*)(&x))
-
 /**
  * The `current` node is always in the trie.
  */
