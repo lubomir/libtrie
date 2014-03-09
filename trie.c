@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 4
+#define VERSION 5
 
 #define INIT_SIZE 4096
 
@@ -44,17 +44,17 @@ static_assert(sizeof(TrieNode) == 8, "TrieNodeChunk has wrong size");
 struct trie {
     int version;
     TrieNode *nodes;
-    size_t len;
-    size_t idx;
+    uint32_t len;
+    uint32_t idx;
 
     TrieNodeChunk *chunks;
-    size_t chunks_len;
-    size_t chunks_idx;
+    uint32_t chunks_len;
+    uint32_t chunks_idx;
 
     char *data;
     String **data_builder;
-    size_t data_idx;
-    size_t data_len;
+    uint32_t data_idx;
+    uint32_t data_len;
 
     void *base_mem;
     size_t file_len;
@@ -106,7 +106,7 @@ static NodeId node_alloc(Trie *t)
 
 Trie * trie_new(void)
 {
-    struct trie *t = calloc(sizeof *t, 1);
+    Trie *t = calloc(sizeof *t, 1);
     t->version = VERSION;
     t->nodes = calloc(sizeof t->nodes[0], INIT_SIZE);
     t->len = INIT_SIZE;
