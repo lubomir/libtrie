@@ -16,12 +16,6 @@
 
 #define INIT_SIZE 4096
 
-#define FULL_CHUNK_BYTE_SIZE 64
-#define FIRST_CHUNK_BYTE_SIZE 56
-#define FULL_CHUNK_LEN 3
-#define FIRST_CHUNK_LEN 2
-#define GET_CHUNK_SIZE(c) ((c)->is_inline ? FIRST_CHUNK_LEN : FULL_CHUNK_LEN)
-
 typedef struct {
     size_t len;
     size_t used;
