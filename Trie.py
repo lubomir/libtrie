@@ -7,15 +7,13 @@ libtrie = cdll.LoadLibrary("./libtrie.so")
 libtrie.trie_lookup.restype = c_char_p
 libtrie.trie_get_last_error.restype = c_char_p
 
-class TrieException(Exception):
-    pass
 
 class Trie(object):
     def __init__(self, filename):
         self.ptr = libtrie.trie_load(filename)
         if self.ptr == 0:
             err = libtrie.trie_get_last_error()
-            raise TrieException(str(err))
+            raise IOError(str(err))
 
     def lookup(self, key):
         res = libtrie.trie_lookup(self.ptr, c_char_p(key))
