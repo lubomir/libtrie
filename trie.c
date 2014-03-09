@@ -36,13 +36,10 @@ static_assert(sizeof(TrieNodeChunk) == 9, "TrieNodeChunk has wrong size");
 
 typedef struct {
     ChunkId chunk;
-    union {
-        DataId offset;
-        String *string;
-    } data;
+    DataId data;
 } TrieNode;
 
-static_assert(sizeof(TrieNode) == 12, "TrieNodeChunk has wrong size");
+//static_assert(sizeof(TrieNode) == 12, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;
@@ -55,6 +52,7 @@ struct trie {
     size_t chunks_idx;
 
     char *data;
+    String **data_builder;
     size_t data_idx;
     size_t data_len;
 
@@ -118,8 +116,8 @@ Trie * trie_new(void)
     t->chunks_len = INIT_SIZE;
     t->chunks_idx = 0;
 
+    t->data_builder = calloc(sizeof *t->data_builder, INIT_SIZE);
     t->data_len = INIT_SIZE;
-    t->data = calloc(1, INIT_SIZE);
     t->data_idx = 1;
 
     node_alloc(t);
@@ -141,28 +139,38 @@ void trie_free(Trie *trie)
     }
 }
 
+/**
+ * @param trie  trie that is being inserted to
+ * @param node  to which node we are inserting
+ * @param data  actual inserted data
+ */
 static void insert_data(Trie *trie, TrieNode *node, const char *data)
 {
     assert(trie->base_mem == NULL);
 
     size_t len = strlen(data);
-
-    if (node->data.string == NULL) {
-        node->data.string = calloc(256, 1);
-        node->data.string->len = 256;
+    /* No string exists for this node yet. */
+    if (node->data == 0) {
+        /* Resize array of strings. */
+        if (trie->data_idx + 1 >= trie->data_len) {
+            trie->data_len *= 2;
+            trie->data_builder = realloc(trie->data_builder,
+                    trie->data_len * sizeof *trie->data_builder);
+        }
+        node->data = trie->data_idx++;
+        trie->data_builder[node->data] = calloc(256, 1);
+        trie->data_builder[node->data]->len = 256;
     }
-
-    if (node->data.string->used + len + 1 >= node->data.string->len - 16) {
-        node->data.string->len *= 2;
-        String *tmp = realloc(node->data.string, node->data.string->len);
-        node->data.string = tmp;
+    String *s = trie->data_builder[node->data];
+    if (s->used + len + 1 >= s->len - 16) {
+        s->len *= 2;
+        trie->data_builder[node->data] = s = realloc(s, s->len);
     }
-
-    if (node->data.string->used > 0) {
-        node->data.string->data[node->data.string->used++] = '\n';
+    if (s->used > 0) {
+        s->data[s->used++] = '\n';
     }
-    strcpy(node->data.string->data + node->data.string->used, data);
-    node->data.string->used += len;
+    strcpy(s->data + s->used, data);
+    s->used += len;
 }
 
 /**
@@ -233,32 +241,33 @@ char * trie_lookup(Trie *trie, const char *key)
     if (current == 0) {
         return NULL;
     }
-    if (trie->base_mem) {
-        return trie->data + trie->nodes[current].data.offset;
-    } else {
-        return trie->nodes[current].data.string->data;
-    }
+    assert(trie->base_mem);
+    return trie->data + trie->nodes[current].data;
 }
 
 static void trie_consolidate(Trie *trie)
 {
     assert(trie->base_mem == NULL);
+    trie->data_len = INIT_SIZE;
+    trie->data_idx = 1;
+    trie->data = calloc(1, INIT_SIZE);
+
     for (NodeId idx = 1; idx < trie->idx; ++idx) {
-        if (trie->nodes[idx].data.string == NULL) {
+        if (trie->nodes[idx].data == 0) {
             continue;
         }
-        char *str = trie->nodes[idx].data.string->data;
-        size_t len = trie->nodes[idx].data.string->used;
-        if (trie->data_idx + len >= trie->data_len) {
+        String *s = trie->data_builder[trie->nodes[idx].data];
+        if (trie->data_idx + s->used >= trie->data_len) {
             trie->data_len *= 2;
             trie->data = realloc(trie->data, trie->data_len);
         }
-        strcpy(trie->data + trie->data_idx, str);
-        free(trie->nodes[idx].data.string);
-        trie->data[trie->data_idx + len] = 0;
-        trie->nodes[idx].data.offset = trie->data_idx;
-        trie->data_idx += len + 1;
+        strcpy(trie->data + trie->data_idx, s->data);
+        trie->data[trie->data_idx + s->used] = 0;
+        trie->nodes[idx].data = trie->data_idx;
+        trie->data_idx += s->used + 1;
+        free(s);
     }
+    free(trie->data_builder);
 }
 
 void trie_serialize(Trie *trie, const char *filename)
