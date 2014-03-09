@@ -36,5 +36,5 @@ endif
 watch :
 	while true; do inotifywait -qe close_write .; $(MAKE); done
 clean :
-	rm -f *.o *.dep
-	rm -f list-compile list-query
+	rm -f *.o *.dep *.pyc
+	rm -f list-compile list-query libtrie.so
