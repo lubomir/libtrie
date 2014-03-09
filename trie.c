@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 2
+#define VERSION 3
 
 #define INIT_SIZE 4096
 
@@ -34,9 +34,9 @@ typedef size_t DataId;
 
 typedef struct {
     ChunkId next;
-    char key;
     NodeId value;
-} TrieNodeChunk;
+    char key;
+} __attribute__((__packed__)) TrieNodeChunk;
 
 
 typedef struct {
@@ -90,7 +90,7 @@ static NodeId node_alloc(Trie *t)
         t->nodes = tmp;
     }
     memset(&t->nodes[t->idx], 0, sizeof t->nodes[t->idx]);
-    t->nodes[t->idx].chunk = chunk_alloc(t);
+    t->nodes[t->idx].chunk = 0;
     assert(t->idx < UINT32_MAX - 1);
     return t->idx++;
 }
@@ -112,6 +112,7 @@ Trie * trie_new(void)
     t->data_idx = 1;
 
     node_alloc(t);
+    chunk_alloc(t);
 
     return t;
 }
