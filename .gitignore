@@ -3,3 +3,5 @@
 *.dep
 list-compile
 list-query
+libtrie.so
+*.pyc
