@@ -13,5 +13,6 @@ char *trie_lookup(Trie *trie, const char *key);
 void trie_serialize(Trie *trie, const char *filename);
 
 Trie * trie_load(const char *filename);
+const char * trie_get_last_error(void);
 
 #endif /* end of include guard: TRIE_H */

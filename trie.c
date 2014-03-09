@@ -59,6 +59,20 @@ struct trie {
     size_t file_len;
 };
 
+#define ERROR_STAT      1
+#define ERROR_OPEN      2
+#define ERROR_MMAP      3
+#define ERROR_VERSION   4
+
+static int last_error = 0;
+static const char *errors[] = {
+    NULL,
+    "Failed to stat the file",
+    "Failed to open file",
+    "Mapping file to memory failed",
+    "File has bad version"
+};
+
 static ChunkId chunk_alloc(Trie *t)
 {
     if (t->chunks_idx >= t->chunks_len) {
@@ -263,13 +277,13 @@ Trie * trie_load(const char *filename)
 {
     struct stat info;
     if (stat(filename, &info) < 0) {
-        perror("stat");
+        last_error = ERROR_STAT;
         return NULL;
     }
 
     int fd = open(filename, O_RDONLY);
     if (fd < 0) {
-        perror("open");
+        last_error = ERROR_OPEN;
         return NULL;
     }
 
@@ -277,20 +291,16 @@ Trie * trie_load(const char *filename)
     close(fd);
 
     if (!mem) {
-        perror("mmap");
+        last_error = ERROR_MMAP;
         return NULL;
     }
 
     Trie *trie = malloc(sizeof *trie);
-    if (!trie) {
-        perror("malloc");
-        goto err1;
-    }
 
     memcpy(trie, mem, sizeof *trie);
     if (trie->version != VERSION) {
-        fprintf(stderr, "Bad version\n");
-        goto err2;
+        last_error = ERROR_VERSION;
+        goto err;
     }
     trie->nodes = (TrieNode *) ((char *)mem + sizeof *trie);
     trie->chunks = (TrieNodeChunk *) ((char *)trie->nodes + sizeof *trie->nodes * trie->idx);
@@ -299,9 +309,13 @@ Trie * trie_load(const char *filename)
     trie->base_mem = mem;
     return trie;
 
-err2:
+err:
     free(trie);
-err1:
     munmap(mem, info.st_size);
     return NULL;
+}
+
+const char * trie_get_last_error(void)
+{
+    return errors[last_error];
 }
