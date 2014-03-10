@@ -41,7 +41,7 @@ class Trie(object):
         Check that `key` is present in the trie. If so, return list of strings
         that are associated with this key. Otherwise return empty list.
         """
-        s = create_string_buffer('\000' * 256)
+        s = create_string_buffer('\000' * 1024)
         res = LIBTRIE.trie_lookup(self.ptr, key, s)
         if res:
             return [s for s in s.value.decode(encoding).split('\n')]
