@@ -42,7 +42,7 @@ class Trie(object):
         s = create_string_buffer('\000' * 256)
         res = libtrie.trie_lookup(self.ptr, key, s)
         if res:
-            return [s.decode(encoding) for s in s.value.split('\n')]
+            return [s for s in s.value.decode(encoding).split('\n')]
         else:
             return []
 
