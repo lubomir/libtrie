@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 # vim: set encoding=utf-8
 
+"""
+This module provides access to libtrie shared object. It should be faster than
+spawning a process and communicating with it.
+"""
+
 from ctypes import cdll, c_char_p, c_void_p, create_string_buffer
 
 libtrie = cdll.LoadLibrary("./libtrie.so")
@@ -12,6 +17,12 @@ libtrie.trie_get_last_error.restype = c_char_p
 
 
 class Trie(object):
+    """
+    Trie class encapsulates the underlying Trie structure. It is created from
+    file and only provides means to query a key. There are no modifications
+    possible.
+    """
+
     def __init__(self, filename):
         self.free_func = libtrie.trie_free
         self.ptr = libtrie.trie_load(filename)
@@ -24,6 +35,10 @@ class Trie(object):
             self.free_func(self.ptr)
 
     def lookup(self, key):
+        """
+        Check that `key` is present in the trie. If so, return list of strings
+        that are associated with this key. Otherwise return empty list.
+        """
         s = create_string_buffer('\000' * 256)
         res = libtrie.trie_lookup(self.ptr, key, s)
         if res:
