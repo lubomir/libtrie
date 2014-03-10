@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 5
+#define VERSION 6
 
 #define INIT_SIZE 4096
 
@@ -28,18 +28,18 @@ typedef uint32_t DataId;
 
 typedef struct {
     ChunkId next;
-    NodeId value;
-    char key;
+    unsigned int value : 24;
+    int key : 8;
 } __attribute__((__packed__)) TrieNodeChunk;
 
-static_assert(sizeof(TrieNodeChunk) == 9, "TrieNodeChunk has wrong size");
+static_assert(sizeof(TrieNodeChunk) == 8, "TrieNodeChunk has wrong size");
 
 typedef struct {
-    ChunkId chunk;
+    unsigned int chunk : 24;
     DataId data;
 } __attribute__((packed)) TrieNode;
 
-static_assert(sizeof(TrieNode) == 8, "TrieNodeChunk has wrong size");
+static_assert(sizeof(TrieNode) == 7, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;
@@ -82,7 +82,7 @@ static ChunkId chunk_alloc(Trie *t)
         t->chunks = tmp;
     }
     memset(&t->chunks[t->chunks_idx], 0, sizeof t->chunks[0]);
-    assert(t->chunks_idx < UINT32_MAX - 1);
+    assert(t->chunks_idx < 0xFFFFFE);
     return t->chunks_idx++;
 }
 
@@ -100,7 +100,7 @@ static NodeId node_alloc(Trie *t)
     }
     memset(&t->nodes[t->idx], 0, sizeof t->nodes[t->idx]);
     t->nodes[t->idx].chunk = 0;
-    assert(t->idx < UINT32_MAX - 1);
+    assert(t->idx < 0xFFFFFE);
     return t->idx++;
 }
 
