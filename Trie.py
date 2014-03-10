@@ -2,7 +2,6 @@
 # vim: set encoding=utf-8
 
 from ctypes import *
-import copy
 
 libtrie = cdll.LoadLibrary("./libtrie.so")
 libtrie.trie_load.argtypes = [c_char_p]
