@@ -375,3 +375,8 @@ const char * trie_get_last_error(void)
 {
     return errors[last_error];
 }
+
+void trie_free_data(char *str)
+{
+    free(str);
+}
