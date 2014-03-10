@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 6
+#define VERSION 7
 
 #define INIT_SIZE 4096
 
@@ -43,6 +43,7 @@ static_assert(sizeof(TrieNode) == 7, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;
+    char compressed;
     TrieNode *nodes;
     uint32_t len;
     uint32_t idx;
@@ -104,10 +105,11 @@ static NodeId node_alloc(Trie *t)
     return t->idx++;
 }
 
-Trie * trie_new(void)
+Trie * trie_new(int compressed)
 {
     Trie *t = calloc(sizeof *t, 1);
     t->version = VERSION;
+    t->compressed = compressed;
     t->nodes = calloc(sizeof t->nodes[0], INIT_SIZE);
     t->len = INIT_SIZE;
     t->idx = 1;
@@ -139,16 +141,57 @@ void trie_free(Trie *trie)
     }
 }
 
+static void
+compress(char *buffer, const char *data, const char *key)
+{
+    size_t key_len = strlen(key);
+    size_t common = 0;
+    for (common = key_len; common > 0; --common) {
+        if (strncmp(key, data, common) == 0) {
+            break;
+        }
+    }
+    buffer[0] = (char) common + '0';
+    strcpy(buffer + 1, data + common);
+}
+
+static void
+decompress(char *buffer, const char *data, const char *key)
+{
+    char tmp[strlen(data) + 1];
+    strcpy(tmp, data);
+
+    char *line = strtok(tmp, "\n");
+    int counter = 0;
+    while (line) {
+        if (counter > 0) {
+            strcat(buffer, "\n");
+        }
+        strncat(buffer, key, line[0] - '0');
+        strcat(buffer, line + 1);
+        ++counter;
+        line = strtok(NULL, "\n");
+    }
+}
+
 /**
  * @param trie  trie that is being inserted to
  * @param node  to which node we are inserting
  * @param data  actual inserted data
  */
-static void insert_data(Trie *trie, TrieNode *node, const char *data)
+static void
+insert_data(Trie *trie, TrieNode *node, const char *data, const char *key)
 {
     assert(trie->base_mem == NULL);
 
     size_t len = strlen(data);
+    char buffer[len+1];
+    strcpy(buffer, data);
+    if (trie->compressed) {
+        compress(buffer, data, key);
+        len = strlen(buffer);
+    }
+
     /* No string exists for this node yet. */
     if (node->data == 0) {
         /* Resize array of strings. */
@@ -169,7 +212,7 @@ static void insert_data(Trie *trie, TrieNode *node, const char *data)
     if (s->used > 0) {
         s->data[s->used++] = '\n';
     }
-    strcpy(s->data + s->used, data);
+    strcpy(s->data + s->used, buffer);
     s->used += len;
 }
 
@@ -208,12 +251,13 @@ static NodeId find_or_create_node(Trie *trie, NodeId current, char key)
 void trie_insert(Trie *trie, const char *key, const char *value)
 {
     NodeId current = 1;
+    const char *orig_key = key;
 
     while (*key) {
         current = find_or_create_node(trie, current, *key);
         ++key;
     }
-    insert_data(trie, trie->nodes + current, value);
+    insert_data(trie, trie->nodes + current, value, orig_key);
 }
 
 static NodeId find_trie_node(Trie *trie, NodeId current, char key)
@@ -233,6 +277,7 @@ static NodeId find_trie_node(Trie *trie, NodeId current, char key)
 char * trie_lookup(Trie *trie, const char *key)
 {
     NodeId current = 1;
+    const char *orig_key = key;
 
     while (*key && current < trie->idx) {
         current = find_trie_node(trie, current, *key++);
@@ -242,7 +287,14 @@ char * trie_lookup(Trie *trie, const char *key)
         return NULL;
     }
     assert(trie->base_mem);
-    return trie->data + trie->nodes[current].data;
+    char *data = trie->data + trie->nodes[current].data;
+    if (trie->compressed) {
+        char *buffer = calloc(1, strlen(data) + data[0]);
+        decompress(buffer, data, orig_key);
+        return buffer;
+    } else {
+        return data;
+    }
 }
 
 static void trie_consolidate(Trie *trie)
