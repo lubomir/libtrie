@@ -35,7 +35,18 @@ class Trie(object):
             return []
 
 
-t = Trie('prijmeni5.trie')
-for s in t.lookup('Sedlář'):
-    print s
-print '%s' % t.lookup('blah')
+def test_main():
+    """
+    This function creates a storage backed by a file and tests it by retrieving
+    a couple of records.
+    """
+    import sys
+    t = Trie('prijmeni5.trie')
+
+    for name in sys.stdin.readlines():
+        name = name.strip()
+        for s in t.lookup(name):
+            print s
+
+if __name__ == '__main__':
+    test_main()
