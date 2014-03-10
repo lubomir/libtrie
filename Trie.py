@@ -2,7 +2,7 @@
 # vim: set encoding=utf-8
 
 """
-This module provides access to libtrie shared object. It should be faster than
+This module provides access to LIBTRIE shared object. It should be faster than
 spawning a process and communicating with it.
 """
 
@@ -10,12 +10,12 @@ from ctypes import cdll, c_char_p, c_void_p, create_string_buffer
 import os
 
 LIBPATH = os.path.dirname(os.path.abspath(__file__)) + '/libtrie.so'
-libtrie = cdll.LoadLibrary(LIBPATH)
-libtrie.trie_load.argtypes = [c_char_p]
-libtrie.trie_load.restype = c_void_p
-libtrie.trie_lookup.argtypes = [c_void_p, c_char_p, c_char_p]
-libtrie.trie_lookup.restype = c_void_p
-libtrie.trie_get_last_error.restype = c_char_p
+LIBTRIE = cdll.LoadLibrary(LIBPATH)
+LIBTRIE.trie_load.argtypes = [c_char_p]
+LIBTRIE.trie_load.restype = c_void_p
+LIBTRIE.trie_lookup.argtypes = [c_void_p, c_char_p, c_char_p]
+LIBTRIE.trie_lookup.restype = c_void_p
+LIBTRIE.trie_get_last_error.restype = c_char_p
 
 
 class Trie(object):
@@ -26,10 +26,10 @@ class Trie(object):
     """
 
     def __init__(self, filename):
-        self.free_func = libtrie.trie_free
-        self.ptr = libtrie.trie_load(filename)
+        self.free_func = LIBTRIE.trie_free
+        self.ptr = LIBTRIE.trie_load(filename)
         if self.ptr == 0:
-            err = libtrie.trie_get_last_error()
+            err = LIBTRIE.trie_get_last_error()
             raise IOError(str(err))
 
     def __del__(self):
@@ -42,7 +42,7 @@ class Trie(object):
         that are associated with this key. Otherwise return empty list.
         """
         s = create_string_buffer('\000' * 256)
-        res = libtrie.trie_lookup(self.ptr, key, s)
+        res = LIBTRIE.trie_lookup(self.ptr, key, s)
         if res:
             return [s for s in s.value.decode(encoding).split('\n')]
         else:
