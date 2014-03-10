@@ -41,13 +41,6 @@ int main(int argc, char *argv[])
 {
     const char *delimiter = ":";
 
-    /*
-    if (argc < 3) {
-        fprintf(stderr, "USAGE: %s INPUT OUTPUT\n", argv[0]);
-        return 1;
-    }
-    */
-
     int opt;
     while ((opt = getopt(argc, argv, "d:")) != -1) {
         switch (opt) {
