@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 7
+#define VERSION 8
 
 #define INIT_SIZE 4096
 
@@ -43,7 +43,6 @@ static_assert(sizeof(TrieNode) == 7, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;
-    char compressed;
     TrieNode *nodes;
     uint32_t len;
     uint32_t idx;
@@ -105,11 +104,10 @@ static NodeId node_alloc(Trie *t)
     return t->idx++;
 }
 
-Trie * trie_new(int compressed)
+Trie * trie_new(void)
 {
     Trie *t = calloc(sizeof *t, 1);
     t->version = VERSION;
-    t->compressed = compressed;
     t->nodes = calloc(sizeof t->nodes[0], INIT_SIZE);
     t->len = INIT_SIZE;
     t->idx = 1;
@@ -187,10 +185,8 @@ insert_data(Trie *trie, TrieNode *node, const char *data, const char *key)
     size_t len = strlen(data);
     char buffer[len+1];
     strcpy(buffer, data);
-    if (trie->compressed) {
-        compress(buffer, data, key);
-        len = strlen(buffer);
-    }
+    compress(buffer, data, key);
+    len = strlen(buffer);
 
     /* No string exists for this node yet. */
     if (node->data == 0) {
@@ -288,13 +284,9 @@ char * trie_lookup(Trie *trie, const char *key)
     }
     assert(trie->base_mem);
     char *data = trie->data + trie->nodes[current].data;
-    if (trie->compressed) {
-        char *buffer = calloc(1, strlen(data) + data[0]);
-        decompress(buffer, data, orig_key);
-        return buffer;
-    } else {
-        return data;
-    }
+    char *buffer = calloc(1, strlen(data) + data[0]);
+    decompress(buffer, data, orig_key);
+    return buffer;
 }
 
 static void trie_consolidate(Trie *trie)

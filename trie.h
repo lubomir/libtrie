@@ -5,7 +5,7 @@
 
 typedef struct trie Trie;
 
-Trie * trie_new(int compressed);
+Trie * trie_new(void);
 void trie_free(Trie *trie);
 void trie_insert(Trie *trie, const char *key, const char *value);
 char *trie_lookup(Trie *trie, const char *key);

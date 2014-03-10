@@ -9,7 +9,7 @@ static Trie * load_data(FILE *fh)
 {
     char *line = NULL;
     size_t len = 0;
-    Trie *trie = trie_new(1);
+    Trie *trie = trie_new();
     unsigned count = 0;
 
     while (getline(&line, &len, fh) > 0) {
