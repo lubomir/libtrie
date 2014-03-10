@@ -5,7 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static Trie * load_data(FILE *fh)
+static Trie * load_data(FILE *fh, const char *delimiter)
 {
     char *line = NULL;
     size_t len = 0;
@@ -17,7 +17,7 @@ static Trie * load_data(FILE *fh)
         *pch = 0;
         if (strlen(line) <= 1)
             continue;
-        char *key = strtok(line, ":");
+        char *key = strtok(line, delimiter);
         char *val = strtok(NULL, "\n");
         if (!val)
             continue;
@@ -39,20 +39,42 @@ static Trie * load_data(FILE *fh)
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3) {
+    const char *delimiter = ":";
+
+    /*
+    if (argc < 3) {
         fprintf(stderr, "USAGE: %s INPUT OUTPUT\n", argv[0]);
         return 1;
     }
-    FILE *infile = fopen(argv[1], "r");
+    */
+
+    int opt;
+    while ((opt = getopt(argc, argv, "d:")) != -1) {
+        switch (opt) {
+        case 'd':
+            delimiter = optarg;
+            break;
+        default:
+            fprintf(stderr, "Usage: %s [OPTIONS...] INPUT OUTPUT\n", argv[0]);
+            return 1;
+        }
+    }
+
+    if (optind >= argc - 1) {
+        fprintf(stderr, "Expected input and output file names\n");
+        return 1;
+    }
+
+    FILE *infile = fopen(argv[optind], "r");
     if (!infile) {
         perror("Failed to open input file");
         return 2;
     }
 
-    Trie *trie = load_data(infile);
+    Trie *trie = load_data(infile, delimiter);
     fclose(infile);
 
-    trie_serialize(trie, argv[2]);
+    trie_serialize(trie, argv[optind + 1]);
 
     trie_free(trie);
 
