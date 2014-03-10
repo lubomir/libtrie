@@ -7,10 +7,9 @@ import copy
 libtrie = cdll.LoadLibrary("./libtrie.so")
 libtrie.trie_load.argtypes = [c_char_p]
 libtrie.trie_load.restype = c_void_p
-libtrie.trie_lookup.argtypes = [ c_void_p, c_char_p ]
+libtrie.trie_lookup.argtypes = [ c_void_p, c_char_p, c_char_p ]
 libtrie.trie_lookup.restype = c_void_p
 libtrie.trie_get_last_error.restype = c_char_p
-libtrie.trie_free_data.argtypes = [ c_void_p ]
 
 
 class Trie(object):
@@ -26,11 +25,10 @@ class Trie(object):
             self.free_func(self.ptr)
 
     def lookup(self, key):
-        res = libtrie.trie_lookup(self.ptr, key)
+        s = create_string_buffer('\000' * 256)
+        res = libtrie.trie_lookup(self.ptr, key, s)
         if res:
-            data = copy.deepcopy(c_char_p(res).value)
-            libtrie.trie_free_data(res)
-            return [s.decode('utf8') for s in data.split('\n')]
+            return [s.decode('utf8') for s in s.value.split('\n')]
         else:
             return []
 
