@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void run_loop(Trie *trie)
 {
@@ -12,6 +13,7 @@ void run_loop(Trie *trie)
         char *data = trie_lookup(trie, buffer);
         if (data) {
             puts(data);
+            free(data);
         } else {
             puts("Not found");
         }
