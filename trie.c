@@ -159,13 +159,17 @@ decompress(char *buffer, const char *data, const char *key)
     char tmp[strlen(data) + 1];
     strcpy(tmp, data);
 
+    buffer[0] = 0;
+
     char *line = strtok(tmp, "\n");
     int counter = 0;
     while (line) {
         if (counter > 0) {
             strcat(buffer, "\n");
         }
+        size_t len = strlen(buffer);
         strncat(buffer, key, line[0] - '0');
+        buffer[len + line[0] - '0'] = 0;
         strcat(buffer, line + 1);
         ++counter;
         line = strtok(NULL, "\n");
@@ -270,7 +274,7 @@ static NodeId find_trie_node(Trie *trie, NodeId current, char key)
     return 0;
 }
 
-char * trie_lookup(Trie *trie, const char *key)
+char * trie_lookup(Trie *trie, const char *key, char *buffer)
 {
     NodeId current = 1;
     const char *orig_key = key;
@@ -284,7 +288,6 @@ char * trie_lookup(Trie *trie, const char *key)
     }
     assert(trie->base_mem);
     char *data = trie->data + trie->nodes[current].data;
-    char *buffer = calloc(1, strlen(data) + data[0]);
     decompress(buffer, data, orig_key);
     return buffer;
 }
@@ -374,9 +377,4 @@ err:
 const char * trie_get_last_error(void)
 {
     return errors[last_error];
-}
-
-void trie_free_data(char *str)
-{
-    free(str);
 }

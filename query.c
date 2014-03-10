@@ -6,14 +6,14 @@
 
 void run_loop(Trie *trie)
 {
+    char result[1024];
     char buffer[1024];
     while (fgets(buffer, sizeof buffer, stdin)) {
         char *pch = strchr(buffer, '\n');
         *pch = 0;
-        char *data = trie_lookup(trie, buffer);
+        char *data = trie_lookup(trie, buffer, result);
         if (data) {
             puts(data);
-            free(data);
         } else {
             puts("Not found");
         }
