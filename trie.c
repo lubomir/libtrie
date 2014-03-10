@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 8
+#define VERSION 9
 
 #define INIT_SIZE 4096
 
@@ -43,6 +43,7 @@ static_assert(sizeof(TrieNode) == 7, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;
+    int with_content;
     TrieNode *nodes;
     uint32_t len;
     uint32_t idx;
@@ -104,10 +105,11 @@ static NodeId node_alloc(Trie *t)
     return t->idx++;
 }
 
-Trie * trie_new(void)
+Trie * trie_new(int with_content)
 {
     Trie *t = calloc(sizeof *t, 1);
     t->version = VERSION;
+    t->with_content = with_content;
     t->nodes = calloc(sizeof t->nodes[0], INIT_SIZE);
     t->len = INIT_SIZE;
     t->idx = 1;
@@ -185,6 +187,11 @@ static void
 insert_data(Trie *trie, TrieNode *node, const char *data, const char *key)
 {
     assert(trie->base_mem == NULL);
+
+    if (!trie->with_content) {
+        node->data = 1;
+        return;
+    }
 
     size_t len = strlen(data);
     char buffer[len+1];
@@ -286,6 +293,9 @@ char * trie_lookup(Trie *trie, const char *key, char *buffer)
     if (current == 0) {
         return NULL;
     }
+    if (!trie->with_content) {
+        return strcpy(buffer, "Found");
+    }
     assert(trie->base_mem);
     char *data = trie->data + trie->nodes[current].data;
     decompress(buffer, data, orig_key);
@@ -324,11 +334,15 @@ void trie_serialize(Trie *trie, const char *filename)
         perror("Failed to open output file");
         return;
     }
-    trie_consolidate(trie);
+    if (trie->with_content) {
+        trie_consolidate(trie);
+    }
     fwrite(trie, sizeof *trie, 1, fh);
     fwrite(trie->nodes, sizeof *trie->nodes, trie->idx, fh);
     fwrite(trie->chunks, sizeof *trie->chunks, trie->chunks_idx, fh);
-    fwrite(trie->data, 1, trie->data_idx, fh);
+    if (trie->with_content) {
+        fwrite(trie->data, 1, trie->data_idx, fh);
+    }
     fclose(fh);
 }
 
@@ -363,7 +377,11 @@ Trie * trie_load(const char *filename)
     }
     trie->nodes = (TrieNode *) ((char *)mem + sizeof *trie);
     trie->chunks = (TrieNodeChunk *) ((char *)trie->nodes + sizeof *trie->nodes * trie->idx);
-    trie->data = (char *)trie->chunks + sizeof *trie->chunks * trie->chunks_idx;
+    if (trie->with_content) {
+        trie->data = (char *)trie->chunks + sizeof *trie->chunks * trie->chunks_idx;
+    } else {
+        trie->data = NULL;
+    }
     trie->file_len = info.st_size;
     trie->base_mem = mem;
     return trie;

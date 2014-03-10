@@ -5,11 +5,11 @@
 #include <string.h>
 #include <unistd.h>
 
-static Trie * load_data(FILE *fh, const char *delimiter)
+static Trie * load_data(FILE *fh, const char *delimiter, int with_content)
 {
     char *line = NULL;
     size_t len = 0;
-    Trie *trie = trie_new();
+    Trie *trie = trie_new(with_content);
     unsigned count = 0;
 
     while (getline(&line, &len, fh) > 0) {
@@ -40,12 +40,16 @@ static Trie * load_data(FILE *fh, const char *delimiter)
 int main(int argc, char *argv[])
 {
     const char *delimiter = ":";
+    int with_content = 1;
 
     int opt;
-    while ((opt = getopt(argc, argv, "d:")) != -1) {
+    while ((opt = getopt(argc, argv, "d:e")) != -1) {
         switch (opt) {
         case 'd':
             delimiter = optarg;
+            break;
+        case 'e':
+            with_content = 0;
             break;
         default:
             fprintf(stderr, "Usage: %s [OPTIONS...] INPUT OUTPUT\n", argv[0]);
@@ -64,7 +68,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    Trie *trie = load_data(infile, delimiter);
+    Trie *trie = load_data(infile, delimiter, with_content);
     fclose(infile);
 
     trie_serialize(trie, argv[optind + 1]);
