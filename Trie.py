@@ -7,8 +7,10 @@ spawning a process and communicating with it.
 """
 
 from ctypes import cdll, c_char_p, c_void_p, create_string_buffer
+import os
 
-libtrie = cdll.LoadLibrary("./libtrie.so")
+LIBPATH = os.path.dirname(os.path.abspath(__file__)) + '/libtrie.so'
+libtrie = cdll.LoadLibrary(LIBPATH)
 libtrie.trie_load.argtypes = [c_char_p]
 libtrie.trie_load.restype = c_void_p
 libtrie.trie_lookup.argtypes = [c_void_p, c_char_p, c_char_p]
