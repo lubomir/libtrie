@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 # vim: set encoding=utf-8
 
-from ctypes import *
+from ctypes import cdll, c_char_p, c_void_p, create_string_buffer
 
 libtrie = cdll.LoadLibrary("./libtrie.so")
 libtrie.trie_load.argtypes = [c_char_p]
 libtrie.trie_load.restype = c_void_p
-libtrie.trie_lookup.argtypes = [ c_void_p, c_char_p, c_char_p ]
+libtrie.trie_lookup.argtypes = [c_void_p, c_char_p, c_char_p]
 libtrie.trie_lookup.restype = c_void_p
 libtrie.trie_get_last_error.restype = c_char_p
 
