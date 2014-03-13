@@ -12,7 +12,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 
-#define VERSION 9
+#define VERSION 11
 
 #define INIT_SIZE 4096
 
@@ -301,28 +301,99 @@ char * trie_lookup(Trie *trie, const char *key, char *buffer)
     return buffer;
 }
 
-static void trie_consolidate(Trie *trie)
+static int string_compare(const void *a, const void *b)
 {
-    assert(trie->base_mem == NULL);
+    const char *s1 = * (char * const *) a;
+    const char *s2 = * (char * const *) b;
+    return strcmp(s1, s2);
+}
+
+/**
+ * Find index of a string in the data section of the trie.
+ */
+static DataId
+search_string(Trie *trie, char **strings, size_t len, const char *string)
+{
+    char **ptr = bsearch(&string, strings, len, sizeof *strings, string_compare);
+    assert(ptr);
+    return *ptr - trie->data;
+}
+
+/**
+ * In an array of strings of given length, replace all sequences of same
+ * elements with a single element.
+ * @return new length of the array
+ */
+static size_t
+strings_deduplicate(char **arr, size_t len)
+{
+    char **read_end = arr;
+    char **write_end = arr;
+
+    while ((size_t) (read_end - arr) < len - 1) {
+        while ((size_t) (read_end - arr) < len - 1 && strcmp(read_end[0], read_end[1]) == 0) {
+            ++read_end;
+        }
+        *write_end = *read_end;
+        ++write_end;
+        ++read_end;
+    }
+    return write_end - arr + 1;
+}
+
+/**
+ * Store all strings in array into the data section of the trie.
+ */
+static void
+store_strings(Trie *trie, char **strings, size_t len)
+{
     trie->data_len = INIT_SIZE;
     trie->data_idx = 1;
     trie->data = calloc(1, INIT_SIZE);
+
+    for (size_t i = 0; i < len; ++i) {
+        size_t string_length = strlen(strings[i]) + 1;
+        if (trie->data_idx + string_length >= trie->data_len) {
+            trie->data_len *= 2;
+            trie->data = realloc(trie->data, trie->data_len);
+        }
+        memcpy(trie->data + trie->data_idx, strings[i], string_length);
+        strings[i] = trie->data + trie->data_idx;
+        trie->data_idx += string_length;
+    }
+}
+
+static void trie_consolidate(Trie *trie)
+{
+    assert(trie->base_mem == NULL);
+
+    char **strings = malloc(INIT_SIZE * sizeof *strings);
+    size_t s_len = INIT_SIZE;
+    size_t s_idx = 0;
+    for (NodeId idx = 1; idx < trie->idx; ++idx) {
+        if (trie->nodes[idx].data == 0) {
+            continue;
+        }
+        if (s_idx >= s_len) {
+            s_len *= 2;
+            strings = realloc(strings, s_len * sizeof *strings);
+        }
+        strings[s_idx++] = trie->data_builder[trie->nodes[idx].data]->data;
+    }
+
+    qsort(strings, s_idx, sizeof *strings, string_compare);
+    s_idx = strings_deduplicate(strings, s_idx);
+    store_strings(trie, strings, s_idx);
 
     for (NodeId idx = 1; idx < trie->idx; ++idx) {
         if (trie->nodes[idx].data == 0) {
             continue;
         }
         String *s = trie->data_builder[trie->nodes[idx].data];
-        if (trie->data_idx + s->used >= trie->data_len) {
-            trie->data_len *= 2;
-            trie->data = realloc(trie->data, trie->data_len);
-        }
-        strcpy(trie->data + trie->data_idx, s->data);
-        trie->data[trie->data_idx + s->used] = 0;
-        trie->nodes[idx].data = trie->data_idx;
-        trie->data_idx += s->used + 1;
+        trie->nodes[idx].data = search_string(trie, strings, s_idx, s->data);
         free(s);
     }
+    free(strings);
     free(trie->data_builder);
 }
 

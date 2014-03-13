@@ -1,8 +1,8 @@
 SRCS=compile.c trie.c query.c
 
 CC=gcc
-CFLAGS=-Wall -Wextra -pedantic -std=gnu11 -g -fPIC
-LDFLAGS=
+CFLAGS=-Wall -Wextra -pedantic -std=gnu11 -g -fPIC -pg
+LDFLAGS=-pg
 DEPS=$(SRCS:.c=.dep)
 
 ifeq ($V,1)
