@@ -327,18 +327,16 @@ search_string(Trie *trie, char **strings, size_t len, const char *string)
 static size_t
 strings_deduplicate(char **arr, size_t len)
 {
-    char **read_end = arr;
-    char **write_end = arr;
+    size_t read = 0;
+    size_t write = 0;
 
-    while ((size_t) (read_end - arr) < len - 1) {
-        while ((size_t) (read_end - arr) < len - 1 && strcmp(read_end[0], read_end[1]) == 0) {
-            ++read_end;
+    while (read < len) {
+        while (read < len - 1 && strcmp(arr[read], arr[read+1]) == 0) {
+            ++read;
         }
-        *write_end = *read_end;
-        ++write_end;
-        ++read_end;
+        arr[write++] = arr[read++];
     }
-    return write_end - arr + 1;
+    return write;
 }
 
 /**
