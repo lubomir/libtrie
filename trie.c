@@ -145,14 +145,15 @@ static void
 compress(char *buffer, const char *data, const char *key)
 {
     size_t key_len = strlen(key);
+    size_t data_len = strlen(data);
     size_t common = 0;
-    for (common = key_len; common > 0; --common) {
-        if (strncmp(key, data, common) == 0) {
-            break;
-        }
+    while (common <= key_len &&
+            common <= data_len &&
+            key[common] == data[common]) {
+        ++common;
     }
     buffer[0] = (char) common + '0';
-    strcpy(buffer + 1, data + common);
+    memcpy(buffer + 1, data + common, data_len - common);
 }
 
 static void
