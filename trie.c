@@ -83,7 +83,7 @@ static ChunkId chunk_alloc(Trie *t)
         t->chunks = tmp;
     }
     memset(&t->chunks[t->chunks_idx], 0, sizeof t->chunks[0]);
-    assert(t->chunks_idx < 0xFFFFFFFE);
+    assert(t->chunks_idx < UINT32_MAX - 1);
     return t->chunks_idx++;
 }
 
@@ -101,7 +101,7 @@ static NodeId node_alloc(Trie *t)
     }
     memset(&t->nodes[t->idx], 0, sizeof t->nodes[t->idx]);
     t->nodes[t->idx].chunk = 0;
-    assert(t->idx < 0xFFFFFFFE);
+    assert(t->idx < UINT32_MAX - 1);
     return t->idx++;
 }
 
