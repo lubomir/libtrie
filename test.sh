@@ -1,18 +1,41 @@
 #!/bin/bash
 
 set -e
-TRIE=$(mktemp)
 
-make
-valgrind ./list-compile /dev/stdin $TRIE <<EOF
+TRIE=$(mktemp)
+COMPILE_INPUT=$(mktemp)
+COMPILE_OUTPUT=$(mktemp)
+QUERY_INPUT=$(mktemp)
+QUERY_OUTPUT=$(mktemp)
+
+cat >"$COMPILE_INPUT" <<EOF
 foo:bar
 baz:quux
 ahoj:baf
 foo:foo
 EOF
-valgrind ./list-query $TRIE <<EOF
+
+cat >"$COMPILE_OUTPUT" <<EOF
+Inserted 4 items
+EOF
+
+cat >"$QUERY_INPUT" << EOF
 foo
 baz
 non
 EOF
-rm -vf $TRIE
+
+cat >"$QUERY_OUTPUT" <<EOF
+bar
+foo
+quux
+Not found
+EOF
+
+make
+
+valgrind ./list-compile "$COMPILE_INPUT" "$TRIE" | tee debug.log | diff -u - "$COMPILE_OUTPUT"
+
+valgrind ./list-query $TRIE <"$QUERY_INPUT" | diff -u - "$QUERY_OUTPUT"
+
+rm -f $TRIE $COMPILE_INPUT $COMPILE_OUTPUT $QUERY_INPUT $QUERY_OUTPUT
