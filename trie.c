@@ -351,12 +351,14 @@ store_strings(Trie *trie, char **strings, size_t len)
 
     for (size_t i = 0; i < len; ++i) {
         size_t string_length = strlen(strings[i]) + 1;
+        char *old_string = strings[i];
         if (trie->data_idx + string_length >= trie->data_len) {
             trie->data_len *= 2;
             trie->data = realloc(trie->data, trie->data_len);
         }
         memcpy(trie->data + trie->data_idx, strings[i], string_length);
         strings[i] = trie->data + trie->data_idx;
+        assert(strcmp(strings[i], old_string) == 0);
         trie->data_idx += string_length;
     }
 }
