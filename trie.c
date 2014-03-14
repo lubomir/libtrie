@@ -363,34 +363,38 @@ store_strings(Trie *trie, char **strings, size_t len)
     }
 }
 
+/**
+ * Move all strings from data builders into the data section of the trie.
+ * @param len   (out) length of returned array
+ * @return      (transfer container) ordered array of strings
+ */
+static char **
+create_strings(Trie *trie, size_t *len)
+{
+    char **strings = malloc(trie->data_idx * sizeof *strings);
+    for (size_t idx = 1; idx < trie->data_idx; ++idx) {
+        strings[idx - 1] = trie->data_builder[idx]->data;
+    }
+
+    qsort(strings, trie->data_idx - 1, sizeof *strings, string_compare);
+    *len = strings_deduplicate(strings, trie->data_idx - 1);
+    store_strings(trie, strings, *len);
+    return strings;
+}
+
 static void trie_consolidate(Trie *trie)
 {
     assert(trie->base_mem == NULL);
 
-    char **strings = malloc(INIT_SIZE * sizeof *strings);
-    size_t s_len = INIT_SIZE;
-    size_t s_idx = 0;
-    for (NodeId idx = 1; idx < trie->idx; ++idx) {
-        if (trie->nodes[idx].data == 0) {
-            continue;
-        }
-        if (s_idx >= s_len) {
-            s_len *= 2;
-            strings = realloc(strings, s_len * sizeof *strings);
-        }
-        strings[s_idx++] = trie->data_builder[trie->nodes[idx].data]->data;
-    }
-
-    qsort(strings, s_idx, sizeof *strings, string_compare);
-    s_idx = strings_deduplicate(strings, s_idx);
-    store_strings(trie, strings, s_idx);
+    size_t s_len;
+    char **strings = create_strings(trie, &s_len);
 
     for (NodeId idx = 1; idx < trie->idx; ++idx) {
         if (trie->nodes[idx].data == 0) {
             continue;
         }
         String *s = trie->data_builder[trie->nodes[idx].data];
-        trie->nodes[idx].data = search_string(trie, strings, s_idx, s->data);
+        trie->nodes[idx].data = search_string(trie, strings, s_len, s->data);
         free(s);
     }
     free(strings);
