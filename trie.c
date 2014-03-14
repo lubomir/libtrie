@@ -421,7 +421,7 @@ Trie * trie_load(const char *filename)
     void *mem = mmap(NULL, info.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
 
-    if (!mem) {
+    if (mem == MAP_FAILED) {
         last_error = ERROR_MMAP;
         return NULL;
     }
