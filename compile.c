@@ -22,7 +22,8 @@ static Trie * load_data(FILE *fh, const char *delimiter, int with_content)
         if (with_content && !val)
             continue;
         trie_insert(trie, key, val);
-        if (isatty(STDOUT_FILENO) && (++count % 1000) == 0) {
+        ++count;
+        if (isatty(STDOUT_FILENO) && (count % 1000) == 0) {
             printf("\rInserted %u items", count);
         }
     }
