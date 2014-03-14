@@ -340,24 +340,17 @@ strings_deduplicate(char **arr, size_t len)
 }
 
 /**
- * Store all strings in array into the data section of the trie.
+ * Store all strings in array into the data section of the trie. Assume the
+ * space for data section was already allocated in sufficient size.
  */
 static void
 store_strings(Trie *trie, char **strings, size_t len)
 {
-    trie->data_len = INIT_SIZE;
-    trie->data_idx = 1;
-    trie->data = calloc(1, INIT_SIZE);
-
     for (size_t i = 0; i < len; ++i) {
         size_t string_length = strlen(strings[i]) + 1;
         char *old_string = strings[i];
-        if (trie->data_idx + string_length >= trie->data_len) {
-            trie->data_len *= 2;
-            trie->data = realloc(trie->data, trie->data_len);
-        }
-        memcpy(trie->data + trie->data_idx, strings[i], string_length);
-        strings[i] = trie->data + trie->data_idx;
+        assert(trie->data_idx + string_length <= trie->data_len);
+        strings[i] = memcpy(trie->data + trie->data_idx, strings[i], string_length);
         assert(strcmp(strings[i], old_string) == 0);
         trie->data_idx += string_length;
     }
@@ -372,12 +365,16 @@ static char **
 create_strings(Trie *trie, size_t *len)
 {
     char **strings = malloc(trie->data_idx * sizeof *strings);
+    trie->data_len = 1;
     for (size_t idx = 1; idx < trie->data_idx; ++idx) {
         strings[idx - 1] = trie->data_builder[idx]->data;
+        trie->data_len += strlen(strings[idx - 1]) + 1;
     }
 
     qsort(strings, trie->data_idx - 1, sizeof *strings, string_compare);
     *len = strings_deduplicate(strings, trie->data_idx - 1);
+    trie->data_idx = 1;
+    trie->data = calloc(1, trie->data_len);
     store_strings(trie, strings, *len);
     return strings;
 }
