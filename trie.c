@@ -28,18 +28,18 @@ typedef uint32_t DataId;
 
 typedef struct {
     ChunkId next;
-    unsigned int value : 24;
-    int key : 8;
+    NodeId value;
+    char key;
 } __attribute__((__packed__)) TrieNodeChunk;
 
-static_assert(sizeof(TrieNodeChunk) == 8, "TrieNodeChunk has wrong size");
+static_assert(sizeof(TrieNodeChunk) == 9, "TrieNodeChunk has wrong size");
 
 typedef struct {
-    unsigned int chunk : 24;
+    ChunkId chunk;
     DataId data;
 } __attribute__((packed)) TrieNode;
 
-static_assert(sizeof(TrieNode) == 7, "TrieNodeChunk has wrong size");
+static_assert(sizeof(TrieNode) == 8, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;
@@ -83,7 +83,7 @@ static ChunkId chunk_alloc(Trie *t)
         t->chunks = tmp;
     }
     memset(&t->chunks[t->chunks_idx], 0, sizeof t->chunks[0]);
-    assert(t->chunks_idx < 0xFFFFFE);
+    assert(t->chunks_idx < 0xFFFFFFFE);
     return t->chunks_idx++;
 }
 
@@ -101,7 +101,7 @@ static NodeId node_alloc(Trie *t)
     }
     memset(&t->nodes[t->idx], 0, sizeof t->nodes[t->idx]);
     t->nodes[t->idx].chunk = 0;
-    assert(t->idx < 0xFFFFFE);
+    assert(t->idx < 0xFFFFFFFE);
     return t->idx++;
 }
 
