@@ -19,7 +19,7 @@ static Trie * load_data(FILE *fh, const char *delimiter, int with_content)
             continue;
         char *key = strtok(line, delimiter);
         char *val = strtok(NULL, "\n");
-        if (!val)
+        if (with_content && !val)
             continue;
         trie_insert(trie, key, val);
         if (isatty(STDOUT_FILENO) && (++count % 1000) == 0) {
