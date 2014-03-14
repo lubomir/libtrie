@@ -153,7 +153,7 @@ compress(char *buffer, const char *data, const char *key)
         ++common;
     }
     buffer[0] = (char) common + '0';
-    memcpy(buffer + 1, data + common, data_len - common);
+    memcpy(buffer + 1, data + common, data_len - common + 1);
 }
 
 static void
