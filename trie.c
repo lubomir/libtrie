@@ -320,40 +320,27 @@ search_string(Trie *trie, char **strings, size_t len, const char *string)
 }
 
 /**
- * In an array of strings of given length, replace all sequences of same
- * elements with a single element.
+ * Move all unique strings from the array to data section of a trie. This
+ * function assumes the data section is already allocated and is big enough.
+ * The array will be changed to only have a single copy of each string.
  * @return new length of the array
  */
 static size_t
-strings_deduplicate(char **arr, size_t len)
+strings_deduplicate(Trie *trie, char **arr, size_t len)
 {
     size_t read = 0;
     size_t write = 0;
+    trie->data_idx = 1;
 
     while (read < len) {
         while (read < len - 1 && strcmp(arr[read], arr[read+1]) == 0) {
             ++read;
         }
-        arr[write++] = arr[read++];
-    }
-    return write;
-}
-
-/**
- * Store all strings in array into the data section of the trie. Assume the
- * space for data section was already allocated in sufficient size.
- */
-static void
-store_strings(Trie *trie, char **strings, size_t len)
-{
-    for (size_t i = 0; i < len; ++i) {
-        size_t string_length = strlen(strings[i]) + 1;
-        char *old_string = strings[i];
-        assert(trie->data_idx + string_length <= trie->data_len);
-        strings[i] = memcpy(trie->data + trie->data_idx, strings[i], string_length);
-        assert(strcmp(strings[i], old_string) == 0);
+        size_t string_length = strlen(arr[read]) + 1;
+        arr[write++] = memcpy(trie->data + trie->data_idx, arr[read++], string_length);
         trie->data_idx += string_length;
     }
+    return write;
 }
 
 /**
@@ -370,12 +357,10 @@ create_strings(Trie *trie, size_t *len)
         strings[idx - 1] = trie->data_builder[idx]->data;
         trie->data_len += strlen(strings[idx - 1]) + 1;
     }
+    trie->data = calloc(1, trie->data_len);
 
     qsort(strings, trie->data_idx - 1, sizeof *strings, string_compare);
-    *len = strings_deduplicate(strings, trie->data_idx - 1);
-    trie->data_idx = 1;
-    trie->data = calloc(1, trie->data_len);
-    store_strings(trie, strings, *len);
+    *len = strings_deduplicate(trie, strings, trie->data_idx - 1);
     return strings;
 }
 
