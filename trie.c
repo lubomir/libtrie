@@ -130,6 +130,8 @@ Trie * trie_new(int with_content)
 
 void trie_free(Trie *trie)
 {
+    if (!trie)
+        return;
     if (trie->base_mem) {
         munmap(trie->base_mem, trie->file_len);
         free(trie);
