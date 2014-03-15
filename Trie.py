@@ -31,12 +31,12 @@ class Trie(object):
     def __init__(self, filename):
         self.free_func = LIBTRIE.trie_free
         self.ptr = LIBTRIE.trie_load(filename)
-        if self.ptr == 0:
+        if not self.ptr:
             err = LIBTRIE.trie_get_last_error()
             raise IOError(str(err))
 
     def __del__(self):
-        if self:
+        if self and self.ptr:
             self.free_func(self.ptr)
 
     def lookup(self, key, encoding='utf8'):
@@ -44,7 +44,7 @@ class Trie(object):
         Check that `key` is present in the trie. If so, return list of strings
         that are associated with this key. Otherwise return empty list.
         """
-        res = LIBTRIE.trie_lookup(self.ptr, key)
+        res = LIBTRIE.trie_lookup(self.ptr, key.encode(encoding))
         if res:
             result = cast(res, c_char_p).value
             LIBC.free(res)
@@ -62,9 +62,8 @@ def test_main():
     t = Trie('prijmeni6.trie')
 
     for name in sys.stdin:
-        name = name.strip()
-        for s in t.lookup(name):
-            print s.encode('utf8')
+        name = name.strip().decode('utf8')
+        print '\n'.join(t.lookup(name)).encode('utf8')
 
 if __name__ == '__main__':
     test_main()
