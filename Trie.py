@@ -6,16 +6,19 @@ This module provides access to LIBTRIE shared object. It should be faster than
 spawning a process and communicating with it.
 """
 
-from ctypes import cdll, c_char_p, c_void_p, create_string_buffer
+from ctypes import cdll, c_char_p, c_void_p, create_string_buffer, cast
+import ctypes.util
 import os
 
 LIBPATH = os.path.dirname(os.path.abspath(__file__)) + '/libtrie.so'
 LIBTRIE = cdll.LoadLibrary(LIBPATH)
 LIBTRIE.trie_load.argtypes = [c_char_p]
 LIBTRIE.trie_load.restype = c_void_p
-LIBTRIE.trie_lookup.argtypes = [c_void_p, c_char_p, c_char_p]
+LIBTRIE.trie_lookup.argtypes = [c_void_p, c_char_p]
 LIBTRIE.trie_lookup.restype = c_void_p
 LIBTRIE.trie_get_last_error.restype = c_char_p
+
+LIBC = ctypes.CDLL(ctypes.util.find_library('c'))
 
 
 class Trie(object):
@@ -41,10 +44,11 @@ class Trie(object):
         Check that `key` is present in the trie. If so, return list of strings
         that are associated with this key. Otherwise return empty list.
         """
-        s = create_string_buffer('\000' * 1024)
-        res = LIBTRIE.trie_lookup(self.ptr, key, s)
+        res = LIBTRIE.trie_lookup(self.ptr, key)
         if res:
-            return [s for s in s.value.decode(encoding).split('\n')]
+            result = cast(res, c_char_p).value
+            LIBC.free(res)
+            return [s for s in result.decode(encoding).split('\n')]
         else:
             return []
 
