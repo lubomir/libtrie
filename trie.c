@@ -12,6 +12,20 @@
 #include <fcntl.h>
 #include <stdint.h>
 
+/*
+ * Add fallback for static assert if not provided by compiler.
+ */
+#ifndef static_assert
+# ifdef _Static_assert
+#  define static_assert(cond, err) _Static_assert(cond, err)
+# else
+#  define JOIN_(x,y) x##y
+#  define JOIN(x,y) JOIN_(x,y)
+#  define static_assert(cond, err) \
+        typedef char JOIN(static_assertion_, __COUNTER__)[(cond)?1:-1]
+# endif
+#endif
+
 #define VERSION 11
 
 #define INIT_SIZE 4096
