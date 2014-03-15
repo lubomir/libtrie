@@ -32,8 +32,7 @@
 
 /**
  * This is a length tagged string implementation. The data is not allocated
- * separately, it directly follows the capacity and length. The `data` array is
- * meant to overflow.
+ * separately, it directly follows the capacity and length.
  *
  * It is not safe to store these structures into arrays or embed them into
  * other structures.
@@ -41,7 +40,7 @@
 typedef struct {
     size_t len;     /**< Capacity of the string. */
     size_t used;    /**< Actual length of the string. */
-    char data[1];   /**< Data of the string. */
+    char data[];    /**< Data of the string. */
 } String;
 
 typedef uint32_t NodeId;
