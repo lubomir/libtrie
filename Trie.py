@@ -2,8 +2,11 @@
 # vim: set encoding=utf-8
 
 """
-This module provides access to LIBTRIE shared object. It should be faster than
-spawning a process and communicating with it.
+This module provides access to libtrie shared object. Using it should be faster
+than spawning a process and communicating with it.
+
+This Python interface only allows for querying the trie. It is not possible to
+create new tries via Python.
 """
 
 from ctypes import cdll, c_char_p, c_void_p, create_string_buffer, cast
@@ -23,12 +26,16 @@ LIBC = ctypes.CDLL(ctypes.util.find_library('c'))
 
 class Trie(object):
     """
-    Trie class encapsulates the underlying Trie structure. It is created from
+    Trie class encapsulates the underlying trie structure. It is created from
     file and only provides means to query a key. There are no modifications
     possible.
     """
 
     def __init__(self, filename, encoding='utf8'):
+        """
+        Create new trie from given file. The optional `encoding` parameter
+        specifies how to encode keys before looking them pu.
+        """
         self.encoding = encoding
         self.free_func = LIBTRIE.trie_free
         self.ptr = LIBTRIE.trie_load(filename)
@@ -42,8 +49,10 @@ class Trie(object):
 
     def lookup(self, key):
         """
-        Check that `key` is present in the trie. If so, return list of strings
+        Check that `key` is present in the trie. If so, return set of strings
         that are associated with this key. Otherwise return empty list.
+
+        The key should be a unicode object.
         """
         res = LIBTRIE.trie_lookup(self.ptr, key.encode(self.encoding))
         if res:
