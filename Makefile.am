@@ -1,8 +1,12 @@
 ACLOCAL_AMFLAGS = -I m4
 
+if ENABLE_SHARED_LIB
 lib_LTLIBRARIES = libtrie.la
-
 include_HEADERS = trie.h
+else
+noinst_LTLIBRARIES = libtrie.la
+noinst_headers = trie.h
+endif
 
 libtrie_la_SOURCES = trie.c
 

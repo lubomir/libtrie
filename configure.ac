@@ -34,5 +34,9 @@ AC_ARG_ENABLE([tools],
     AS_HELP_STRING([--disable-tools], [Disable CLI tools]))
 AM_CONDITIONAL([ENABLE_TOOLS], [test "x$enable_tools" != "xno"])
 
+AC_ARG_ENABLE([shared-lib],
+    AS_HELP_STRING([--disable-shared-lib], [Do not install shared library]))
+AM_CONDITIONAL([ENABLE_SHARED_LIB], [test "x$enable_shared_lib" != "xno"])
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
