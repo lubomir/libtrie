@@ -16,10 +16,18 @@
 
 #define INIT_SIZE 4096
 
+/**
+ * This is a length tagged string implementation. The data is not allocated
+ * separately, it directly follows the capacity and length. The `data` array is
+ * meant to overflow.
+ *
+ * It is not safe to store these structures into arrays or embed them into
+ * other structures.
+ */
 typedef struct {
-    size_t len;
-    size_t used;
-    char data[1];
+    size_t len;     /**< Capacity of the string. */
+    size_t used;    /**< Actual length of the string. */
+    char data[1];   /**< Data of the string. */
 } String;
 
 typedef uint32_t NodeId;
@@ -27,26 +35,26 @@ typedef uint32_t ChunkId;
 typedef uint32_t DataId;
 
 typedef struct {
-    ChunkId next;
-    NodeId value;
-    char key;
+    ChunkId next;   /**< Next chunk in the linked list. */
+    NodeId value;   /**< Node associated with this chunk. */
+    char key;       /**< Key of this chunk. */
 } __attribute__((__packed__)) TrieNodeChunk;
 
 static_assert(sizeof(TrieNodeChunk) == 9, "TrieNodeChunk has wrong size");
 
 typedef struct {
-    ChunkId chunk;
-    DataId data;
+    ChunkId chunk;  /**< First chunk of the linked list of children. */
+    DataId data;    /**< Data associated with this node. */
 } __attribute__((packed)) TrieNode;
 
 static_assert(sizeof(TrieNode) == 8, "TrieNodeChunk has wrong size");
 
 struct trie {
-    int version;
-    int with_content;
-    TrieNode *nodes;
-    uint32_t len;
-    uint32_t idx;
+    int version;        /**< Version of trie. */
+    int with_content;   /**< Whether the trie stores data. */
+    TrieNode *nodes;    /**< Array of all trie nodes. */
+    uint32_t len;       /**< Capacity of the node array. */
+    uint32_t idx;       /**< Number of nodes used. */
 
     TrieNodeChunk *chunks;
     uint32_t chunks_len;
@@ -57,8 +65,8 @@ struct trie {
     uint32_t data_idx;
     uint32_t data_len;
 
-    void *base_mem;
-    size_t file_len;
+    void *base_mem;     /**< Address of the memory mapped file. */
+    size_t file_len;    /**< Size of the file on disk. */
 };
 
 #define ERROR_STAT      1
