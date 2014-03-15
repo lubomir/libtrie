@@ -28,8 +28,9 @@ class Trie(object):
     possible.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, encoding='utf8'):
         self.cache = {}
+        self.encoding = encoding
         self.free_func = LIBTRIE.trie_free
         self.ptr = LIBTRIE.trie_load(filename)
         if not self.ptr:
@@ -40,20 +41,19 @@ class Trie(object):
         if self and self.ptr:
             self.free_func(self.ptr)
 
-    def lookup(self, key, encoding='utf8'):
+    def lookup(self, key):
         """
         Check that `key` is present in the trie. If so, return list of strings
         that are associated with this key. Otherwise return empty list.
         """
-        key = key.encode(encoding)
         if key in self.cache:
             return self.cache[key]
 
-        res = LIBTRIE.trie_lookup(self.ptr, key)
+        res = LIBTRIE.trie_lookup(self.ptr, key.encode(self.encoding))
         if res:
-            result = cast(res, c_char_p).value
+            result = cast(res, c_char_p).value.decode(self.encoding)
             LIBC.free(res)
-            self.cache[key] = set(s for s in result.decode(encoding).split('\n'))
+            self.cache[key] = set(s for s in result.split('\n'))
             return self.cache[key]
         else:
             return []
