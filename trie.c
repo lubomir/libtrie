@@ -166,7 +166,6 @@ decompress(const char *data, const char *key)
     size_t used = 0;
     char *buffer = calloc(1, len);
 
-    size_t key_len = strlen(key);
     char *line = strtok(tmp, "\n");
     int counter = 0;
     while (line) {
