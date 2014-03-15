@@ -268,6 +268,9 @@ static NodeId find_or_create_node(Trie *trie, NodeId current, char key)
 
 void trie_insert(Trie *trie, const char *key, const char *value)
 {
+    if (trie->base_mem) {
+        return;
+    }
     NodeId current = 1;
     const char *orig_key = key;
 
@@ -294,6 +297,9 @@ static NodeId find_trie_node(Trie *trie, NodeId current, char key)
 
 char * trie_lookup(Trie *trie, const char *key)
 {
+    if (!trie->base_mem) {
+        return NULL;
+    }
     NodeId current = 1;
     const char *orig_key = key;
 
@@ -308,7 +314,6 @@ char * trie_lookup(Trie *trie, const char *key)
         char *result = malloc(64);
         return strcpy(result, "Found");
     }
-    assert(trie->base_mem);
     char *data = trie->data + trie->nodes[current].data;
     return decompress(data, orig_key);
 }
@@ -397,6 +402,9 @@ static void trie_consolidate(Trie *trie)
 
 void trie_serialize(Trie *trie, const char *filename)
 {
+    if (trie->base_mem) {
+        return;
+    }
     FILE *fh = fopen(filename, "w");
     if (!fh) {
         perror("Failed to open output file");
