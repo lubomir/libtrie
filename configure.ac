@@ -40,3 +40,11 @@ AM_CONDITIONAL([ENABLE_SHARED_LIB], [test "x$enable_shared_lib" != "xno"])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
+
+echo ""
+echo "libtrie $VERSION"
+echo ""
+echo " Prefix..........................: ${prefix}"
+echo " CFLAGS..........................: ${CFLAGS}"
+echo " Building tools..................: ${enable_tools:-yes}"
+echo " Installing shared library.......: ${enable_shared_lib:-yes}"
