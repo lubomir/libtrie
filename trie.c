@@ -92,11 +92,7 @@ static NodeId node_alloc(Trie *t)
     if (t->idx >= t->len) {
         t->len *= 2;
         TrieNode *tmp = realloc(t->nodes, sizeof *tmp * t->len);
-        if (!tmp) {
-            perror("Failed to allocate node");
-            free(t->nodes);
-            exit(1);
-        }
+        assert(tmp);
         t->nodes = tmp;
     }
     memset(&t->nodes[t->idx], 0, sizeof t->nodes[t->idx]);
