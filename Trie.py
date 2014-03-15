@@ -9,7 +9,7 @@ This Python interface only allows for querying the trie. It is not possible to
 create new tries via Python.
 """
 
-from ctypes import cdll, c_char_p, c_void_p, create_string_buffer, cast
+from ctypes import cdll, c_char_p, c_void_p, cast
 import ctypes.util
 import os
 
