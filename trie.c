@@ -282,7 +282,7 @@ static NodeId find_trie_node(Trie *trie, NodeId current, char key)
     return 0;
 }
 
-char * trie_lookup(Trie *trie, const char *key, char *buffer)
+char * trie_lookup(Trie *trie, const char *key)
 {
     NodeId current = 1;
     const char *orig_key = key;
@@ -295,12 +295,14 @@ char * trie_lookup(Trie *trie, const char *key, char *buffer)
         return NULL;
     }
     if (!trie->with_content) {
-        return strcpy(buffer, "Found");
+        char *result = malloc(64);
+        return strcpy(result, "Found");
     }
     assert(trie->base_mem);
     char *data = trie->data + trie->nodes[current].data;
-    decompress(buffer, data, orig_key);
-    return buffer;
+    char *result = malloc(strlen(data) + data[0] + 2);
+    decompress(result, data, orig_key);
+    return result;
 }
 
 static int string_compare(const void *a, const void *b)

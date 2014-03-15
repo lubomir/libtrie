@@ -8,7 +8,7 @@ typedef struct trie Trie;
 Trie * trie_new(int with_content);
 void trie_free(Trie *trie);
 void trie_insert(Trie *trie, const char *key, const char *value);
-char * trie_lookup(Trie *trie, const char *key, char *data);
+char * trie_lookup(Trie *trie, const char *key);
 
 void trie_serialize(Trie *trie, const char *filename);
 
