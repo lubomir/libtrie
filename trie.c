@@ -293,7 +293,7 @@ char * trie_lookup(Trie *trie, const char *key)
         current = find_trie_node(trie, current, *key++);
     }
     assert(current < trie->idx);
-    if (current == 0) {
+    if (current == 0 || trie->nodes[current].data == 0) {
         return NULL;
     }
     if (!trie->with_content) {
