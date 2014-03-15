@@ -160,7 +160,7 @@ decompress(const char *data, const char *key)
 
     size_t len = 1024;
     size_t used = 0;
-    char *buffer = calloc(1, len);
+    char *buffer = malloc(len);
 
     char *line = strtok(tmp, "\n");
     int counter = 0;
