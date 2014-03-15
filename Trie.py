@@ -59,9 +59,9 @@ def test_main():
     a couple of records.
     """
     import sys
-    t = Trie('prijmeni5.trie')
+    t = Trie('prijmeni6.trie')
 
-    for name in sys.stdin.readlines():
+    for name in sys.stdin:
         name = name.strip()
         for s in t.lookup(name):
             print s.encode('utf8')
