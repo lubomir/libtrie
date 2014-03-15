@@ -156,27 +156,34 @@ compress(char *buffer, const char *data, const char *key)
     memcpy(buffer + 1, data + common, data_len - common + 1);
 }
 
-static void
-decompress(char *buffer, const char *data, const char *key)
+static char *
+decompress(const char *data, const char *key)
 {
     char tmp[strlen(data) + 1];
     strcpy(tmp, data);
 
-    buffer[0] = 0;
+    size_t len = 1024;
+    size_t used = 0;
+    char *buffer = calloc(1, len);
 
+    size_t key_len = strlen(key);
     char *line = strtok(tmp, "\n");
     int counter = 0;
     while (line) {
-        if (counter > 0) {
-            strcat(buffer, "\n");
+        size_t line_len = strlen(line);
+        while (used + 1 + line[0] - '0' + line_len >= len) {
+            len *= 2;
+            buffer = realloc(buffer, len);
         }
-        size_t len = strlen(buffer);
-        strncat(buffer, key, line[0] - '0');
-        buffer[len + line[0] - '0'] = 0;
-        strcat(buffer, line + 1);
-        ++counter;
+        if (counter++ > 0) {
+            buffer[used++] = '\n';
+        }
+        memcpy(buffer + used, key, line[0] - '0');
+        memcpy(buffer + used + line[0] - '0', line + 1, line_len);
+        used += line[0] - '0' + line_len - 1;
         line = strtok(NULL, "\n");
     }
+    return buffer;
 }
 
 /**
@@ -300,9 +307,7 @@ char * trie_lookup(Trie *trie, const char *key)
     }
     assert(trie->base_mem);
     char *data = trie->data + trie->nodes[current].data;
-    char *result = malloc(strlen(data) + data[0] + 2);
-    decompress(result, data, orig_key);
-    return result;
+    return decompress(data, orig_key);
 }
 
 static int string_compare(const void *a, const void *b)
