@@ -29,6 +29,7 @@ class Trie(object):
     """
 
     def __init__(self, filename):
+        self.cache = {}
         self.free_func = LIBTRIE.trie_free
         self.ptr = LIBTRIE.trie_load(filename)
         if not self.ptr:
@@ -44,11 +45,16 @@ class Trie(object):
         Check that `key` is present in the trie. If so, return list of strings
         that are associated with this key. Otherwise return empty list.
         """
-        res = LIBTRIE.trie_lookup(self.ptr, key.encode(encoding))
+        key = key.encode(encoding)
+        if key in self.cache:
+            return self.cache[key]
+
+        res = LIBTRIE.trie_lookup(self.ptr, key)
         if res:
             result = cast(res, c_char_p).value
             LIBC.free(res)
-            return [s for s in result.decode(encoding).split('\n')]
+            self.cache[key] = set(s for s in result.decode(encoding).split('\n'))
+            return self.cache[key]
         else:
             return []
 
