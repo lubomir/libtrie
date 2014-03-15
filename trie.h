@@ -34,6 +34,8 @@ void trie_free(Trie *trie);
 
 /**
  * Insert data into the trie. The trie must have been created via `trie_new()`.
+ * If the keys is already present in the trie, the data will be appended to the
+ * current data (delimited by a new line.
  *
  * @param trie  trie to insert into
  * @param key   under which key to insert the data
