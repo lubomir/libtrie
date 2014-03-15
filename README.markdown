@@ -1,5 +1,3 @@
-> I find the fastest way to travel is by candlelight.
-
 # Libtrie
 
 This is an implementation of the prefix tree structure usable for looking up
@@ -22,6 +20,9 @@ values to be equal.
 ## Command line utilities
 
 Apart from the shared object, this library provides two command line utilities.
+While there is no inherent problem with using the tools with data in any
+encoding, it was not tested and probably won't work out of the box. You should
+use [UTF-8 everywhere](http://www.utf8everywhere.org/) anyway.
 
 ### list-compile
 
@@ -47,3 +48,17 @@ input (one on a line) and for each output the associated data.
 There is a Python module interface for the library written using the
 [ctypes](http://docs.python.org/2/library/ctypes.html) foreign function
 library. It exposes a single module `Trie` with one useful method `lookup`.
+
+The constructor of the class expects one positional argument – the filename to
+be loaded – and one optional keyword argument `encoding` specifying the
+encoding of the file. The default encoding is UTF-8. Should the loading fail,
+an `IOError` with detailed description is thrown.
+
+The `lookup` method needs one positional argument – the `unicode` key to be
+looked up in the trie. This method returns a set of strings associated with the
+key. The set is empty if the key was not present in the trie.
+
+
+## C API
+
+For details of exported C functions, see the `trie.h` header file.
