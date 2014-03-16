@@ -34,8 +34,10 @@ EOF
 
 make
 
-valgrind ./list-compile "$COMPILE_INPUT" "$TRIE" | tee debug.log | diff -u - "$COMPILE_OUTPUT"
+valgrind -q ./list-compile "$COMPILE_INPUT" "$TRIE" \
+    | diff -q - "$COMPILE_OUTPUT"
 
-valgrind ./list-query $TRIE <"$QUERY_INPUT" | diff -u - "$QUERY_OUTPUT"
+valgrind -q ./list-query $TRIE <"$QUERY_INPUT" \
+    | diff -q - "$QUERY_OUTPUT"
 
 rm -f $TRIE $COMPILE_INPUT $COMPILE_OUTPUT $QUERY_INPUT $QUERY_OUTPUT

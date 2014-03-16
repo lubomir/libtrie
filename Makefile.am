@@ -19,3 +19,6 @@ list_compile_LDADD = libtrie.la
 list_query_SOURCES = src/query.c
 list_query_LDADD = libtrie.la
 endif
+
+TESTS = \
+	tests/integration/test01.sh
