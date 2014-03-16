@@ -38,13 +38,27 @@ static Trie * load_data(FILE *fh, const char *delimiter, int with_content)
     return trie;
 }
 
+static void usage(FILE *fh, const char *prog)
+{
+    fprintf(fh, "Usage: %s [OPTIONS...] INPUT OUTPUT\n", prog);
+}
+
+static void help(const char *prog)
+{
+    usage(stdout, prog);
+    puts("\nAvailable options:");
+    puts("  -dDELIMITER     set delimiter between key and value");
+    puts("  -e              do not store data associated with keys");
+    puts("  -h              print this help");
+}
+
 int main(int argc, char *argv[])
 {
     const char *delimiter = ":";
     int with_content = 1;
 
     int opt;
-    while ((opt = getopt(argc, argv, "d:e")) != -1) {
+    while ((opt = getopt(argc, argv, "d:eh")) != -1) {
         switch (opt) {
         case 'd':
             delimiter = optarg;
@@ -52,8 +66,11 @@ int main(int argc, char *argv[])
         case 'e':
             with_content = 0;
             break;
+        case 'h':
+            help(argv[0]);
+            return 0;
         default:
-            fprintf(stderr, "Usage: %s [OPTIONS...] INPUT OUTPUT\n", argv[0]);
+            usage(stderr, argv[0]);
             return 1;
         }
     }
