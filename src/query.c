@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 void run_loop(Trie *trie)
 {
@@ -25,6 +26,11 @@ int main(int argc, char *argv[])
     if (argc != 2) {
         fprintf(stderr, "Usage: %s FILE\n", argv[0]);
         return 1;
+    }
+    if (strcmp(argv[1], "-h") == 0) {
+        printf("Usage: %s FILE\n", argv[0]);
+        puts("This program has no other options.");
+        return 0;
     }
     Trie *trie = trie_load(argv[1]);
     if (!trie) {
