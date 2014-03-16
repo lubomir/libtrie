@@ -49,7 +49,7 @@ class Trie(object):
 
     def lookup(self, key):
         """
-        Check that `key` is present in the trie. If so, return set of strings
+        Check that `key` is present in the trie. If so, return list of strings
         that are associated with this key. Otherwise return empty list.
 
         The key should be a unicode object.
@@ -58,7 +58,7 @@ class Trie(object):
         if res:
             result = cast(res, c_char_p).value.decode(self.encoding)
             LIBC.free(res)
-            return set(s for s in result.split('\n'))
+            return [s for s in result.split('\n')]
         else:
             return []
 
