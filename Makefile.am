@@ -27,3 +27,5 @@ TESTS = \
 	tests/integration/test02.sh \
 	tests/integration/test03.sh \
 	$(NULL)
+
+EXTRA_DIST = $(TESTS) README.markdown
