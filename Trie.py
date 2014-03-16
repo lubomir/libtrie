@@ -69,11 +69,18 @@ def test_main():
     a couple of records.
     """
     import sys
-    t = Trie('prijmeni6.trie')
+    if len(sys.argv) != 2:
+        sys.stderr.write('Need one command line argument - trie file\n')
+        sys.exit(1)
+    t = Trie(sys.argv[1])
 
     for name in sys.stdin:
         name = name.strip().decode('utf8')
-        print '\n'.join(t.lookup(name)).encode('utf8')
+        res = t.lookup(name)
+        if res:
+            print '\n'.join(res).encode('utf8')
+        else:
+            print 'Not found'
 
 if __name__ == '__main__':
     test_main()
