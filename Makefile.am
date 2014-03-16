@@ -1,5 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
+NULL=
+
 if ENABLE_SHARED_LIB
 lib_LTLIBRARIES = libtrie.la
 include_HEADERS = src/trie.h
@@ -21,4 +23,7 @@ list_query_LDADD = libtrie.la
 endif
 
 TESTS = \
-	tests/integration/test01.sh
+	tests/integration/test01.sh \
+	tests/integration/test02.sh \
+	tests/integration/test03.sh \
+	$(NULL)
