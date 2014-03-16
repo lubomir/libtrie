@@ -33,6 +33,8 @@ argument. The other available option is `-e`. This signifies that no data will
 be associated with the keys. There can still be the delimiter after the key or
 even some data. It will be ignored.
 
+The arguments can be reviewed by running the utility with `-h` option.
+
 Should there be more occurrences of the same key, the data will be concatenated
 as lines and stored together.
 
@@ -55,8 +57,8 @@ encoding of the file. The default encoding is UTF-8. Should the loading fail,
 an `IOError` with detailed description is thrown.
 
 The `lookup` method needs one positional argument – the `unicode` key to be
-looked up in the trie. This method returns a set of strings associated with the
-key. The set is empty if the key was not present in the trie.
+looked up in the trie. This method returns a list of strings associated with
+the key. The list is empty if the key was not present in the trie.
 
 
 ## C API
