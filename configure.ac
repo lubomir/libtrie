@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([libtrie], [0.1], [lubomir.sedlar@gmail.com])
-AC_CONFIG_SRCDIR([trie.h])
+AC_CONFIG_SRCDIR([src/trie.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config.h])
