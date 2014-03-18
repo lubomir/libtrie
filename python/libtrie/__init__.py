@@ -15,7 +15,6 @@ import os
 
 from libtrie.config import LIB_PATH
 
-#LIBPATH = os.path.dirname(os.path.abspath(__file__)) + '/libtrie.so'
 LIBTRIE = cdll.LoadLibrary(LIB_PATH)
 LIBTRIE.trie_load.argtypes = [c_char_p]
 LIBTRIE.trie_load.restype = c_void_p
