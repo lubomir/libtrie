@@ -5,6 +5,12 @@ NULL=
 if ENABLE_SHARED_LIB
 lib_LTLIBRARIES = libtrie.la
 include_HEADERS = src/trie.h
+
+pylibtrie_PYTHON = python/libtrie/__init__.py \
+		   python/libtrie/config.py \
+		   $(NULL)
+
+pylibtriedir = $(pythondir)/libtrie
 else
 noinst_LTLIBRARIES = libtrie.la
 noinst_headers = src/trie.h
@@ -21,12 +27,6 @@ list_compile_LDADD = libtrie.la
 list_query_SOURCES = src/query.c
 list_query_LDADD = libtrie.la
 endif
-
-pylibtrie_PYTHON = python/libtrie/__init__.py \
-		   python/libtrie/config.py \
-		   $(NULL)
-
-pylibtriedir = $(pythondir)/libtrie
 
 TESTS = \
 	tests/integration/test01.sh \

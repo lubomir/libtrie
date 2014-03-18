@@ -10,7 +10,6 @@ AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([1.11 foreign subdir-objects -Wall dist-xz])
 AM_SILENT_RULES([yes])
-AM_PATH_PYTHON([2.7])
 
 # Checks for programs.
 AC_PROG_CC_C99
@@ -38,6 +37,10 @@ AM_CONDITIONAL([ENABLE_TOOLS], [test "x$enable_tools" != "xno"])
 AC_ARG_ENABLE([shared-lib],
     AS_HELP_STRING([--disable-shared-lib], [Do not install shared library]))
 AM_CONDITIONAL([ENABLE_SHARED_LIB], [test "x$enable_shared_lib" != "xno"])
+
+AS_IF([test "x$enable_shared_lib" != "xno"], [
+       AM_PATH_PYTHON([2.7])
+       ])
 
 AC_CONFIG_FILES([Makefile python/libtrie/config.py])
 AC_OUTPUT
