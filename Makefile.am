@@ -22,6 +22,12 @@ list_query_SOURCES = src/query.c
 list_query_LDADD = libtrie.la
 endif
 
+pylibtrie_PYTHON = python/libtrie/__init__.py \
+		   python/libtrie/config.py \
+		   $(NULL)
+
+pylibtriedir = $(pythondir)/libtrie
+
 TESTS = \
 	tests/integration/test01.sh \
 	tests/integration/test02.sh \
