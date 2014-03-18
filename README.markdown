@@ -73,11 +73,8 @@ tarball, and run the classic `./configure`, `make` and `make install`. Note
 that libtrie supports out-of-tree builds. You can also use the `make check`
 target to run the tests (which are admittedly not very good).
 
-This setup will by default install the command line tools and the shared
-library. To work with the Python wrapper, for now you will have to manually
-copy the `Trie.py` module somewhere and update the `LIBPATH` constant at the
-top of the file to point to the installed shared library. Path will differ
-based on prefix set when configuring.
+This setup will by default install the command line tools as well as the shared
+library and Python bindings.
 
 To build from Git, you will need `autotools` installed. After cloning the
 repository, run `autoreconf -i` and continue as though building from tarball.
