@@ -1,3 +1,4 @@
+#include <config.h>
 #include "trie.h"
 
 #include <stdio.h>
@@ -50,6 +51,9 @@ static void help(const char *prog)
     puts("  -dDELIMITER     set delimiter between key and value");
     puts("  -e              do not store data associated with keys");
     puts("  -h              print this help");
+    puts("");
+    puts("This is list-compile from "PACKAGE" "VERSION".");
+    puts("File bug reports at <"PACKAGE_URL">.");
 }
 
 int main(int argc, char *argv[])

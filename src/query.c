@@ -1,3 +1,4 @@
+#include <config.h>
 #include "trie.h"
 
 #include <stdio.h>
@@ -30,6 +31,9 @@ int main(int argc, char *argv[])
     if (strcmp(argv[1], "-h") == 0) {
         printf("Usage: %s FILE\n", argv[0]);
         puts("This program has no other options.");
+        puts("");
+        puts("This is list-query from "PACKAGE" "VERSION".");
+        puts("File bug reports at <"PACKAGE_URL">.");
         return 0;
     }
     Trie *trie = trie_load(argv[1]);
