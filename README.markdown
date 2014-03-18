@@ -16,6 +16,9 @@ on the actual keys and values. It can be as much as 15 time smaller or 10 times
 as large. It is good for the keys to have lots of common prefixes and for
 values to be equal.
 
+The library is provided under BSD 3-clause license. For details, see the
+LICENSE file.
+
 
 ## Command line utilities
 
