@@ -433,7 +433,7 @@ static void squash_list(Trie *trie, ChunkId idx, ChunkId *pos)
 static void reorder_chunks(Trie *trie)
 {
     assert(trie->base_mem == NULL);
-    trie->real_chunks = malloc(2 * trie->chunks_idx * sizeof *trie->real_chunks);
+    trie->real_chunks = calloc(2 * trie->chunks_idx * sizeof *trie->real_chunks, 1);
     ChunkId chunk_position = 1;
 
     for (NodeId idx = 1; idx < trie->idx; ++idx) {
