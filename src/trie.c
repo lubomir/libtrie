@@ -26,7 +26,7 @@
 # endif
 #endif
 
-#define VERSION 12
+#define VERSION 13
 
 #define INIT_SIZE 4096
 
@@ -68,11 +68,12 @@ typedef struct {
 static_assert(sizeof(TrieNodeChunk) == 5, "TrieNodeChunk has wrong size");
 
 typedef struct {
-    ChunkId chunk;  /**< First chunk of the linked list of children. */
-    DataId data;    /**< Data associated with this node. */
+    ChunkId chunk;              /**< First chunk of the linked list of children. */
+    DataId data;                /**< Data associated with this node. */
+    unsigned char num_chunks;   /**< Number chunks associated with this node. */
 } __attribute__((packed)) TrieNode;
 
-static_assert(sizeof(TrieNode) == 8, "TrieNodeChunk has wrong size");
+static_assert(sizeof(TrieNode) == 9, "TrieNodeChunk has wrong size");
 
 struct trie {
     int version;        /**< Version of trie. */
@@ -314,14 +315,9 @@ void trie_insert(Trie *trie, const char *key, const char *value)
 static NodeId find_trie_node(Trie *trie, NodeId current, char key)
 {
     assert(current < trie->idx);
-    /*
-    for (ChunkId chunk_idx = trie->nodes[current].chunk;
-            chunk_idx > 0 && chunk_idx < trie->chunks_idx;
-            chunk_idx = trie->chunks[chunk_idx].next) {
-    */
-    for (ChunkId idx = trie->nodes[current].chunk;
-            trie->real_chunks[idx].key && idx < trie->chunks_idx;
-            ++idx) {
+    ChunkId start_pos = trie->nodes[current].chunk;
+    ChunkId end_pos = start_pos + trie->nodes[current].num_chunks;
+    for (ChunkId idx = start_pos; idx < end_pos; ++idx) {
         if (trie->real_chunks[idx].key == key) {
             return trie->real_chunks[idx].value;
         }
@@ -423,7 +419,6 @@ static void squash_list(Trie *trie, ChunkId idx, ChunkId *pos)
         ++(*pos);
         idx = trie->chunks[idx].next;
     }
-    trie->real_chunks[(*pos)++].key = 0;
 }
 
 static void reorder_chunks(Trie *trie)
@@ -437,6 +432,7 @@ static void reorder_chunks(Trie *trie)
         if (old_start) {
             trie->nodes[idx].chunk = chunk_position;
             squash_list(trie, old_start, &chunk_position);
+            trie->nodes[idx].num_chunks = chunk_position - trie->nodes[idx].chunk;
         }
     }
 
