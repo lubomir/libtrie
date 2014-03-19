@@ -26,7 +26,7 @@
 # endif
 #endif
 
-#define VERSION 11
+#define VERSION 12
 
 #define INIT_SIZE 4096
 
@@ -47,13 +47,25 @@ typedef uint32_t NodeId;
 typedef uint32_t ChunkId;
 typedef uint32_t DataId;
 
+/**
+ * This is the linked list used during compilation to build the Trie.
+ */
 typedef struct {
     ChunkId next;   /**< Next chunk in the linked list. */
     NodeId value;   /**< Node associated with this chunk. */
     char key;       /**< Key of this chunk. */
+} TrieNodeChunkBuilder;
+
+/**
+ * The actual chunk will be used after consolidating. Next chunk in the list is
+ * following directly after it.
+ */
+typedef struct {
+    NodeId value;   /**< Index of the node linked from this chunk. **/
+    char key;       /**< Key for this chunk. **/
 } __attribute__((__packed__)) TrieNodeChunk;
 
-static_assert(sizeof(TrieNodeChunk) == 9, "TrieNodeChunk has wrong size");
+static_assert(sizeof(TrieNodeChunk) == 5, "TrieNodeChunk has wrong size");
 
 typedef struct {
     ChunkId chunk;  /**< First chunk of the linked list of children. */
@@ -69,9 +81,11 @@ struct trie {
     uint32_t len;       /**< Capacity of the node array. */
     uint32_t idx;       /**< Number of nodes used. */
 
-    TrieNodeChunk *chunks;
+    TrieNodeChunkBuilder *chunks;
     uint32_t chunks_len;
     uint32_t chunks_idx;
+
+    TrieNodeChunk *real_chunks;
 
     char *data;
     String **data_builder;
@@ -100,7 +114,7 @@ static ChunkId chunk_alloc(Trie *t)
 {
     if (t->chunks_idx >= t->chunks_len) {
         t->chunks_len *= 2;
-        TrieNodeChunk *tmp = realloc(t->chunks, sizeof *tmp * t->chunks_len);
+        TrieNodeChunkBuilder *tmp = realloc(t->chunks, sizeof *tmp * t->chunks_len);
         t->chunks = tmp;
     }
     memset(&t->chunks[t->chunks_idx], 0, sizeof t->chunks[0]);
@@ -157,6 +171,7 @@ void trie_free(Trie *trie)
     } else {
         free(trie->nodes);
         free(trie->chunks);
+        free(trie->real_chunks);
         free(trie->data);
         free(trie);
     }
@@ -273,7 +288,7 @@ static NodeId find_or_create_node(Trie *trie, NodeId current, char key)
         trie->nodes[current].chunk = continuation;
     }
 
-    TrieNodeChunk *next = trie->chunks + continuation;
+    TrieNodeChunkBuilder *next = trie->chunks + continuation;
     next->next = 0;
     next->key = key;
     next->value = node_alloc(trie);
@@ -299,12 +314,16 @@ void trie_insert(Trie *trie, const char *key, const char *value)
 static NodeId find_trie_node(Trie *trie, NodeId current, char key)
 {
     assert(current < trie->idx);
+    /*
     for (ChunkId chunk_idx = trie->nodes[current].chunk;
             chunk_idx > 0 && chunk_idx < trie->chunks_idx;
             chunk_idx = trie->chunks[chunk_idx].next) {
-
-        if (trie->chunks[chunk_idx].key == key) {
-            return trie->chunks[chunk_idx].value;
+    */
+    for (ChunkId idx = trie->nodes[current].chunk;
+            trie->real_chunks[idx].key && idx < trie->chunks_idx;
+            ++idx) {
+        if (trie->real_chunks[idx].key == key) {
+            return trie->real_chunks[idx].value;
         }
     }
     return 0;
@@ -396,6 +415,35 @@ create_strings(Trie *trie, size_t *len)
     return strings;
 }
 
+static void squash_list(Trie *trie, ChunkId idx, ChunkId *pos)
+{
+    while (idx > 0) {
+        trie->real_chunks[*pos].value = trie->chunks[idx].value;
+        trie->real_chunks[*pos].key = trie->chunks[idx].key;
+        ++(*pos);
+        idx = trie->chunks[idx].next;
+    }
+    trie->real_chunks[(*pos)++].key = 0;
+}
+
+static void reorder_chunks(Trie *trie)
+{
+    assert(trie->base_mem == NULL);
+    trie->real_chunks = malloc(2 * trie->chunks_idx * sizeof *trie->real_chunks);
+    ChunkId chunk_position = 1;
+
+    for (NodeId idx = 1; idx < trie->idx; ++idx) {
+        ChunkId old_start = trie->nodes[idx].chunk;
+        if (old_start) {
+            trie->nodes[idx].chunk = chunk_position;
+            squash_list(trie, old_start, &chunk_position);
+        }
+    }
+
+    trie->chunks_idx = chunk_position;
+    trie->chunks_len = 0;
+}
+
 static void trie_consolidate(Trie *trie)
 {
     assert(trie->base_mem == NULL);
@@ -404,12 +452,11 @@ static void trie_consolidate(Trie *trie)
     char **strings = create_strings(trie, &s_len);
 
     for (NodeId idx = 1; idx < trie->idx; ++idx) {
-        if (trie->nodes[idx].data == 0) {
-            continue;
+        if (trie->nodes[idx].data) {
+            String *s = trie->data_builder[trie->nodes[idx].data];
+            trie->nodes[idx].data = search_string(trie, strings, s_len, s->data);
+            free(s);
         }
-        String *s = trie->data_builder[trie->nodes[idx].data];
-        trie->nodes[idx].data = search_string(trie, strings, s_len, s->data);
-        free(s);
     }
     free(strings);
     free(trie->data_builder);
@@ -425,12 +472,13 @@ void trie_serialize(Trie *trie, const char *filename)
         perror("Failed to open output file");
         return;
     }
+    reorder_chunks(trie);
     if (trie->with_content) {
         trie_consolidate(trie);
     }
     fwrite(trie, sizeof *trie, 1, fh);
     fwrite(trie->nodes, sizeof *trie->nodes, trie->idx, fh);
-    fwrite(trie->chunks, sizeof *trie->chunks, trie->chunks_idx, fh);
+    fwrite(trie->real_chunks, sizeof *trie->real_chunks, trie->chunks_idx, fh);
     if (trie->with_content) {
         fwrite(trie->data, 1, trie->data_idx, fh);
     }
@@ -467,9 +515,10 @@ Trie * trie_load(const char *filename)
         goto err;
     }
     trie->nodes = (TrieNode *) ((char *)mem + sizeof *trie);
-    trie->chunks = (TrieNodeChunk *) ((char *)trie->nodes + sizeof *trie->nodes * trie->idx);
+    trie->real_chunks = (TrieNodeChunk *) ((char *)trie->nodes +
+                                            sizeof *trie->nodes * trie->idx);
     if (trie->with_content) {
-        trie->data = (char *)trie->chunks + sizeof *trie->chunks * trie->chunks_idx;
+        trie->data = (char *)trie->real_chunks + sizeof *trie->real_chunks * trie->chunks_idx;
     } else {
         trie->data = NULL;
     }
