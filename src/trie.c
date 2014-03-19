@@ -312,17 +312,22 @@ void trie_insert(Trie *trie, const char *key, const char *value)
     insert_data(trie, trie->nodes + current, value, orig_key);
 }
 
+static int chunk_compare(const void *a, const void *b)
+{
+    const TrieNodeChunk *c1 = (const TrieNodeChunk *) a;
+    const TrieNodeChunk *c2 = (const TrieNodeChunk *) b;
+    return c1->key - c2->key;
+}
+
 static NodeId find_trie_node(Trie *trie, NodeId current, char key)
 {
     assert(current < trie->idx);
-    ChunkId start_pos = trie->nodes[current].chunk;
-    ChunkId end_pos = start_pos + trie->nodes[current].num_chunks;
-    for (ChunkId idx = start_pos; idx < end_pos; ++idx) {
-        if (trie->real_chunks[idx].key == key) {
-            return trie->real_chunks[idx].value;
-        }
-    }
-    return 0;
+    TrieNodeChunk key_chunk = { .value = 0, .key = key };
+    TrieNodeChunk *chunk = bsearch(&key_chunk,
+            trie->real_chunks + trie->nodes[current].chunk,
+            trie->nodes[current].num_chunks, sizeof(*trie->real_chunks),
+            chunk_compare);
+    return chunk ? chunk->value : 0;
 }
 
 char * trie_lookup(Trie *trie, const char *key)
@@ -413,12 +418,16 @@ create_strings(Trie *trie, size_t *len)
 
 static void squash_list(Trie *trie, ChunkId idx, ChunkId *pos)
 {
+    ChunkId start_pos = *pos;
     while (idx > 0) {
         trie->real_chunks[*pos].value = trie->chunks[idx].value;
         trie->real_chunks[*pos].key = trie->chunks[idx].key;
         ++(*pos);
         idx = trie->chunks[idx].next;
     }
+
+    qsort(trie->real_chunks + start_pos, *pos - start_pos,
+            sizeof(*trie->real_chunks), chunk_compare);
 }
 
 static void reorder_chunks(Trie *trie)
