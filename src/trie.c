@@ -135,9 +135,11 @@ Trie * trie_new(int with_content)
     t->chunks_len = INIT_SIZE;
     t->chunks_idx = 0;
 
-    t->data_builder = calloc(sizeof *t->data_builder, INIT_SIZE);
-    t->data_len = INIT_SIZE;
-    t->data_idx = 1;
+    if (with_content) {
+        t->data_builder = calloc(sizeof *t->data_builder, INIT_SIZE);
+        t->data_len = INIT_SIZE;
+        t->data_idx = 1;
+    }
 
     node_alloc(t);
     chunk_alloc(t);
