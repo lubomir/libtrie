@@ -26,7 +26,7 @@
 # endif
 #endif
 
-#define VERSION 13
+#define VERSION 14
 
 #define INIT_SIZE 4096
 
