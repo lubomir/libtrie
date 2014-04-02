@@ -3,6 +3,13 @@
 set -e
 set -o pipefail
 
+if [ "x${USE_VALGRIND:-yes}" == "xno" ]; then
+    VALGRIND=""
+else
+    VALGRIND="valgrind --error-exitcode=1 -q"
+fi
+
+
 TRIE=$(mktemp)
 COMPILE_INPUT=$(mktemp)
 COMPILE_OUTPUT=$(mktemp)
@@ -33,10 +40,10 @@ EOF
 
 make
 
-libtool --mode=execute valgrind --error-exitcode=1 -q ./list-compile -e "$COMPILE_INPUT" "$TRIE" \
+libtool --mode=execute $VALGRIND ./list-compile -e "$COMPILE_INPUT" "$TRIE" \
     | diff -q - "$COMPILE_OUTPUT"
 
-libtool --mode=execute valgrind --error-exitcode=1 -q ./list-query $TRIE <"$QUERY_INPUT" \
+libtool --mode=execute $VALGRIND ./list-query $TRIE <"$QUERY_INPUT" \
     | diff -q - "$QUERY_OUTPUT"
 
 rm -f $TRIE $COMPILE_INPUT $COMPILE_OUTPUT $QUERY_INPUT $QUERY_OUTPUT

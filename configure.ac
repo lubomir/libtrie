@@ -43,6 +43,10 @@ AS_IF([test "x$enable_shared_lib" != "xno"], [
        AM_PATH_PYTHON([2.7])
        ])
 
+AC_ARG_ENABLE([coverage],
+    AS_HELP_STRING([--enable-coverage], [Enable measuring code coverage]))
+AM_CONDITIONAL([ENABLE_COVERAGE], [test "x$enable_coverage" == "xyes"])
+
 AC_CONFIG_FILES([Makefile python/libtrie/config.py])
 AC_OUTPUT
 

@@ -1,6 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 NULL=
+AM_CFLAGS=
 
 if ENABLE_SHARED_LIB
 lib_LTLIBRARIES = libtrie.la
@@ -33,5 +34,22 @@ TESTS = \
 	tests/integration/test02.sh \
 	tests/integration/test03.sh \
 	$(NULL)
+
+if ENABLE_COVERAGE
+AM_CFLAGS+=--coverage --no-inline
+
+clean-gcda:
+	rm -rf coverage coverage.info
+	find . -name '*.gcda' -exec rm {} \+
+	lcov --directory $(top_builddir)/src --zerocounters
+
+coverage :
+	@make clean-gcda
+	@make USE_VALGRIND="no" check
+	lcov -c -d $(top_builddir)/src -o coverage.info
+	genhtml -o coverage coverage.info
+clean-local:
+	@make clean-gcda
+endif
 
 EXTRA_DIST = $(TESTS) README.markdown
