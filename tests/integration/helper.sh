@@ -7,10 +7,11 @@ COMPILE_INPUT=$(mktemp)
 COMPILE_OUTPUT=$(mktemp)
 QUERY_INPUT=$(mktemp)
 QUERY_OUTPUT=$(mktemp)
+TEMP=$(mktemp)
 
 cleanup()
 {
-    rm -f $TRIE $COMPILE_INPUT $COMPILE_OUTPUT $QUERY_INPUT $QUERY_OUTPUT
+    rm -f $TRIE $COMPILE_INPUT $COMPILE_OUTPUT $QUERY_INPUT $QUERY_OUTPUT $TEMP
 }
 
 trap cleanup EXIT
@@ -35,6 +36,16 @@ query_output()
     cat >$QUERY_OUTPUT
 }
 
+run()
+{
+    ACTION=$1
+    shift
+    if ! $*; then
+        echo "When running action $ACTION:  <$*> failed" >&2
+        exit 1
+    fi
+}
+
 runtest()
 {
     ARGS=$1
@@ -45,9 +56,9 @@ runtest()
     fi
     RUNNER="libtool --mode=execute $VALGRIND"
 
-    $RUNNER ./list-compile $ARGS $COMPILE_INPUT $TRIE \
-        | diff -q - "$COMPILE_OUTPUT"
+    run compile $RUNNER ./list-compile $ARGS $COMPILE_INPUT $TRIE >$TEMP
+    run compile diff -q $TEMP $COMPILE_OUTPUT
 
-    $RUNNER ./list-query $TRIE <$QUERY_INPUT \
-        | diff -q - "$QUERY_OUTPUT"
+    run query $RUNNER ./list-query $TRIE <$QUERY_INPUT >$TEMP
+    run query diff -q $TEMP $QUERY_OUTPUT
 }
