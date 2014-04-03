@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-if [ "x${USE_VALGRIND:-yes}" = "xno" ]; then
+if [ "x${USE_VALGRIND:-yes}" = "xno" ] || ! which valgrind; then
     VALGRIND=""
 else
     VALGRIND="valgrind --error-exitcode=1 -q"
