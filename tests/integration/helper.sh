@@ -2,6 +2,7 @@
 
 set -o pipefail
 
+TRIE=$(mktemp)
 COMPILE_INPUT=$(mktemp)
 COMPILE_OUTPUT=$(mktemp)
 QUERY_INPUT=$(mktemp)
@@ -38,17 +39,15 @@ runtest()
 {
     ARGS=$1
 
-    TRIE=$(mktemp)
-
+    VALGRIND="valgrind --error-exitcode=1 -q"
     if [ "x${USE_VALGRIND:-yes}" = "xno" ] || ! which valgrind; then
         VALGRIND=""
-    else
-        VALGRIND="valgrind --error-exitcode=1 -q"
     fi
+    RUNNER="libtool --mode=execute $VALGRIND"
 
-    libtool --mode=execute $VALGRIND ./list-compile $ARGS "$COMPILE_INPUT" "$TRIE" \
+    $RUNNER ./list-compile $ARGS $COMPILE_INPUT $TRIE \
         | diff -q - "$COMPILE_OUTPUT"
 
-    libtool --mode=execute $VALGRIND ./list-query $TRIE <"$QUERY_INPUT" \
+    $RUNNER ./list-query $TRIE <$QUERY_INPUT \
         | diff -q - "$QUERY_OUTPUT"
 }
