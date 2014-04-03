@@ -39,8 +39,6 @@ quux
 Not found
 EOF
 
-make
-
 libtool --mode=execute $VALGRIND ./list-compile "$COMPILE_INPUT" "$TRIE" \
     | diff -q - "$COMPILE_OUTPUT"
 

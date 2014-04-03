@@ -40,8 +40,6 @@ quux
 Not found
 EOF
 
-make
-
 libtool --mode=execute $VALGRIND ./list-compile -d'|' "$COMPILE_INPUT" "$TRIE" \
     | diff -q - "$COMPILE_OUTPUT"
 

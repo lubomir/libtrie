@@ -38,8 +38,6 @@ Found
 Not found
 EOF
 
-make
-
 libtool --mode=execute $VALGRIND ./list-compile -e "$COMPILE_INPUT" "$TRIE" \
     | diff -q - "$COMPILE_OUTPUT"
 
