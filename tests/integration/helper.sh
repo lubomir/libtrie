@@ -55,8 +55,8 @@ runtest()
     RUNNER="libtool --mode=execute $VALGRIND"
 
     run compile $RUNNER ./list-compile $ARGS $COMPILE_INPUT $TRIE >$TEMP
-    run compile diff -q $TEMP $COMPILE_OUTPUT
+    run compile diff $TEMP $COMPILE_OUTPUT
 
     run query $RUNNER ./list-query $TRIE <$QUERY_INPUT >$TEMP
-    run query diff -q $TEMP $QUERY_OUTPUT
+    run query diff $TEMP $QUERY_OUTPUT
 }
