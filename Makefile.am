@@ -30,14 +30,14 @@ list_query_LDADD = libtrie.la
 endif
 
 TESTS = \
-	tests/integration/test01.sh \
-	tests/integration/test02.sh \
-	tests/integration/test03.sh \
-	tests/integration/test04.sh \
-	tests/integration/test05.sh \
-	tests/integration/test06.sh \
-	tests/integration/test07.sh \
-	tests/integration/test08.sh \
+	tests/integration/basic-insert.sh \
+	tests/integration/custom-delimiter.sh \
+	tests/integration/no-data-with-keys.sh \
+	tests/integration/random-keys.sh \
+	tests/integration/random-keys-not-found.sh \
+	tests/integration/very-long-data.sh \
+	tests/integration/very-many-keys.sh \
+	tests/integration/querying-bad-file.sh \
 	$(NULL)
 
 if ENABLE_COVERAGE
