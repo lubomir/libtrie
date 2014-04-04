@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-set -o pipefail
-
 TRIE=$(mktemp)
 COMPILE_INPUT=$(mktemp)
 COMPILE_OUTPUT=$(mktemp)
