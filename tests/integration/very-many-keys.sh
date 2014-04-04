@@ -4,11 +4,6 @@
 
 COUNT=10000
 
-SHUF=shuf
-if ! which shuf >/dev/null; then
-    SHUF=cat
-fi
-
 for n in $(seq 1 $COUNT); do
     echo "my-key-$n:my-data-$n"
 done | $SHUF | compile_input

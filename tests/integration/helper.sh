@@ -7,6 +7,11 @@ QUERY_INPUT=$(mktemp)
 QUERY_OUTPUT=$(mktemp)
 TEMP=$(mktemp)
 
+SHUF=shuf
+if ! which shuf >/dev/null; then
+    SHUF=cat
+fi
+
 cleanup()
 {
     rm -f $TRIE $COMPILE_INPUT $COMPILE_OUTPUT $QUERY_INPUT $QUERY_OUTPUT $TEMP
