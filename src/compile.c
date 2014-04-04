@@ -89,7 +89,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    FILE *infile = fopen(argv[optind], "r");
+    FILE *infile = NULL;
+    if (strcmp(argv[optind], "-") == 0) {
+        infile = stdin;
+    } else {
+        infile = fopen(argv[optind], "r");
+    }
     if (!infile) {
         perror("Failed to open input file");
         return 2;
