@@ -38,6 +38,8 @@ even some data. It will be ignored.
 
 The arguments can be reviewed by running the utility with `-h` option.
 
+If you pass `-` as input filename, the data will be read from standard input.
+
 Should there be more occurrences of the same key, the data will be concatenated
 as lines and stored together.
 
