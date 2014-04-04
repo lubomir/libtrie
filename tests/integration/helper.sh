@@ -51,7 +51,7 @@ runtest()
     ARGS=$1
 
     VALGRIND="valgrind --error-exitcode=1 -q"
-    if [ "x${USE_VALGRIND:-yes}" = "xno" ] || ! which valgrind; then
+    if [ "x${USE_VALGRIND:-yes}" = "xno" ] || ! which valgrind >/dev/null; then
         VALGRIND=""
     fi
     RUNNER="libtool --mode=execute $VALGRIND"
