@@ -18,10 +18,15 @@ static Trie * load_data(FILE *fh, const char *delimiter, int with_content)
         *pch = 0;
         if (strlen(line) <= 1)
             continue;
-        char *key = strtok(line, delimiter);
-        char *val = strtok(NULL, "\n");
-        if (with_content && !val)
-            continue;
+        char *key, *val = NULL;
+        if (with_content) {
+            key = strtok(line, delimiter);
+            val = strtok(NULL, "\n");
+            if (!val)
+                continue;
+        } else {
+            key = line;
+        }
         trie_insert(trie, key, val);
         ++count;
         if (isatty(STDOUT_FILENO) && (count % 1000) == 0) {
