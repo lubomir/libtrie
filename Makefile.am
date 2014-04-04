@@ -35,6 +35,7 @@ TESTS = \
 	tests/integration/test03.sh \
 	tests/integration/test04.sh \
 	tests/integration/test05.sh \
+	tests/integration/test06.sh \
 	$(NULL)
 
 if ENABLE_COVERAGE
