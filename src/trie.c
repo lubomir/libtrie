@@ -26,7 +26,7 @@
 # endif
 #endif
 
-#define VERSION 14
+#define VERSION 15
 
 #define INIT_SIZE 4096
 
@@ -76,11 +76,11 @@ typedef struct {
 static_assert(sizeof(TrieNode) == 9, "TrieNodeChunk has wrong size");
 
 struct trie {
-    int version;        /**< Version of trie. */
-    int with_content;   /**< Whether the trie stores data. */
-    TrieNode *nodes;    /**< Array of all trie nodes. */
-    uint32_t len;       /**< Capacity of the node array. */
-    uint32_t idx;       /**< Number of nodes used. */
+    uint8_t version;        /**< Version of trie. */
+    uint8_t with_content;   /**< Whether the trie stores data. */
+    TrieNode *nodes;        /**< Array of all trie nodes. */
+    uint32_t len;           /**< Capacity of the node array. */
+    uint32_t idx;           /**< Number of nodes used. */
 
     TrieNodeChunkBuilder *chunks;
     uint32_t chunks_len;
