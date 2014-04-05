@@ -21,8 +21,7 @@ LIBTRIE.trie_load.restype = c_void_p
 LIBTRIE.trie_lookup.argtypes = [c_void_p, c_char_p]
 LIBTRIE.trie_lookup.restype = c_void_p
 LIBTRIE.trie_get_last_error.restype = c_char_p
-
-LIBC = ctypes.CDLL(ctypes.util.find_library('c'))
+LIBTRIE.trie_result_free.argtypes = [c_void_p, c_void_p]
 
 
 class Trie(object):
@@ -58,7 +57,7 @@ class Trie(object):
         res = LIBTRIE.trie_lookup(self.ptr, key.encode(self.encoding))
         if res:
             result = cast(res, c_char_p).value.decode(self.encoding)
-            LIBC.free(res)
+            LIBTRIE.trie_result_free(self.ptr, res)
             return [s for s in result.split('\n')]
         else:
             return []

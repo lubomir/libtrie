@@ -15,7 +15,7 @@ void run_loop(Trie *trie)
         char *data = trie_lookup(trie, buffer);
         if (data) {
             puts(data);
-            free(data);
+            trie_result_free(trie, data);
         } else {
             puts("Not found");
         }

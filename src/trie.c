@@ -358,8 +358,7 @@ char * trie_lookup(Trie *trie, const char *key)
     if (trie->use_compress) {
         return decompress(data, orig_key);
     }
-    char *result = malloc(strlen(data) + 1);
-    return strcpy(result, data);
+    return data;
 }
 
 static int string_compare(const void *a, const void *b)
@@ -549,4 +548,11 @@ err:
 const char * trie_get_last_error(void)
 {
     return errors[last_error];
+}
+
+void trie_result_free(Trie *trie, char *data)
+{
+    if (trie->use_compress) {
+        free(data);
+    }
 }

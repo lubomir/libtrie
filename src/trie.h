@@ -47,13 +47,21 @@ void trie_insert(Trie *trie, const char *key, const char *value);
 /**
  * Look up a value under given key. The trie must have been loaded from a file.
  * The result is dynamically allocated and it is the caller's responsibility to
- * free it.
+ * free it using the `trie_result_free()`.
  *
  * @param trie  trie to search
  * @param key   what key is wanted
  * @return      associated value or NULL
  */
 char * trie_lookup(Trie *trie, const char *key);
+
+/**
+ * Free looked up data.
+ *
+ * @param trie  the trie from which the key was retrieved
+ * @param data  retrieved data
+ */
+void trie_result_free(Trie *trie, char *data);
 
 /**
  * Store the trie into a file. The trie must have been created from scratch via
