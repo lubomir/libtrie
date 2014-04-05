@@ -6,11 +6,12 @@
 #include <string.h>
 #include <unistd.h>
 
-static Trie * load_data(FILE *fh, const char *delimiter, int with_content)
+static Trie *
+load_data(FILE *fh, const char *delimiter, int with_content, int use_compress)
 {
     char *line = NULL;
     size_t len = 0;
-    Trie *trie = trie_new(with_content);
+    Trie *trie = trie_new(with_content, use_compress);
     unsigned count = 0;
 
     while (getline(&line, &len, fh) > 0) {
@@ -55,6 +56,7 @@ static void help(const char *prog)
     puts("\nAvailable options:");
     puts("  -dDELIMITER     set delimiter between key and value");
     puts("  -e              do not store data associated with keys");
+    puts("  -u              do not use compression");
     puts("  -h              print this help");
     puts("");
     puts("This is list-compile from "PACKAGE" "VERSION".");
@@ -65,15 +67,19 @@ int main(int argc, char *argv[])
 {
     const char *delimiter = ":";
     int with_content = 1;
+    int use_compress = 1;
 
     int opt;
-    while ((opt = getopt(argc, argv, "d:eh")) != -1) {
+    while ((opt = getopt(argc, argv, "d:euh")) != -1) {
         switch (opt) {
         case 'd':
             delimiter = optarg;
             break;
         case 'e':
             with_content = 0;
+            break;
+        case 'u':
+            use_compress = 0;
             break;
         case 'h':
             help(argv[0]);
@@ -100,7 +106,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    Trie *trie = load_data(infile, delimiter, with_content);
+    Trie *trie = load_data(infile, delimiter, with_content, use_compress);
     fclose(infile);
 
     trie_serialize(trie, argv[optind + 1]);

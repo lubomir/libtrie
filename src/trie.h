@@ -21,9 +21,10 @@ typedef struct trie Trie;
  * needed.
  *
  * @param with_content  whether there will be data associated with nodes
+ * @param use_compress  whether to use the prefix compression for data
  * @return              new empty trie
  */
-Trie * trie_new(int with_content);
+Trie * trie_new(int with_content, int use_compress);
 
 /**
  * Free all memory held by the trie.

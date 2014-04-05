@@ -26,7 +26,7 @@
 # endif
 #endif
 
-#define VERSION 15
+#define VERSION 16
 
 #define INIT_SIZE 4096
 
@@ -78,6 +78,7 @@ static_assert(sizeof(TrieNode) == 9, "TrieNodeChunk has wrong size");
 struct trie {
     uint8_t version;        /**< Version of trie. */
     uint8_t with_content;   /**< Whether the trie stores data. */
+    uint8_t use_compress;   /**< Whether to use the compression. */
     TrieNode *nodes;        /**< Array of all trie nodes. */
     uint32_t len;           /**< Capacity of the node array. */
     uint32_t idx;           /**< Number of nodes used. */
@@ -137,7 +138,7 @@ static NodeId node_alloc(Trie *t)
     return t->idx++;
 }
 
-Trie * trie_new(int with_content)
+Trie * trie_new(int with_content, int use_compress)
 {
     Trie *t = calloc(sizeof *t, 1);
     t->version = VERSION;
@@ -155,6 +156,8 @@ Trie * trie_new(int with_content)
         t->data_len = INIT_SIZE;
         t->data_idx = 1;
     }
+
+    t->use_compress = use_compress;
 
     node_alloc(t);
     chunk_alloc(t);
@@ -238,7 +241,9 @@ insert_data(Trie *trie, TrieNode *node, const char *data, const char *key)
     size_t len = strlen(data);
     char buffer[len+1];
     strcpy(buffer, data);
-    compress(buffer, data, key);
+    if (trie->use_compress) {
+        compress(buffer, data, key);
+    }
     len = strlen(buffer);
 
     /* No string exists for this node yet. */
@@ -350,7 +355,11 @@ char * trie_lookup(Trie *trie, const char *key)
         return strcpy(result, "Found");
     }
     char *data = trie->data + trie->nodes[current].data;
-    return decompress(data, orig_key);
+    if (trie->use_compress) {
+        return decompress(data, orig_key);
+    }
+    char *result = malloc(strlen(data) + 1);
+    return strcpy(result, data);
 }
 
 static int string_compare(const void *a, const void *b)
