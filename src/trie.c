@@ -335,7 +335,7 @@ static NodeId find_trie_node(Trie *trie, NodeId current, char key)
     return chunk ? chunk->value : 0;
 }
 
-char * trie_lookup(Trie *trie, const char *key)
+const char * trie_lookup(Trie *trie, const char *key)
 {
     if (!trie->base_mem) {
         return NULL;
@@ -550,9 +550,9 @@ const char * trie_get_last_error(void)
     return errors[last_error];
 }
 
-void trie_result_free(Trie *trie, char *data)
+void trie_result_free(Trie *trie, const char *data)
 {
     if (trie->use_compress) {
-        free(data);
+        free((void *)data);
     }
 }

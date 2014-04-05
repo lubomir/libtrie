@@ -53,7 +53,7 @@ void trie_insert(Trie *trie, const char *key, const char *value);
  * @param key   what key is wanted
  * @return      associated value or NULL
  */
-char * trie_lookup(Trie *trie, const char *key);
+const char * trie_lookup(Trie *trie, const char *key);
 
 /**
  * Free looked up data.
@@ -61,7 +61,7 @@ char * trie_lookup(Trie *trie, const char *key);
  * @param trie  the trie from which the key was retrieved
  * @param data  retrieved data
  */
-void trie_result_free(Trie *trie, char *data);
+void trie_result_free(Trie *trie, const char *data);
 
 /**
  * Store the trie into a file. The trie must have been created from scratch via

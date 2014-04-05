@@ -12,7 +12,7 @@ void run_loop(Trie *trie)
     while (fgets(buffer, sizeof buffer, stdin)) {
         char *pch = strchr(buffer, '\n');
         *pch = 0;
-        char *data = trie_lookup(trie, buffer);
+        const char *data = trie_lookup(trie, buffer);
         if (data) {
             puts(data);
             trie_result_free(trie, data);
