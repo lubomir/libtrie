@@ -31,12 +31,16 @@ endif
 
 TESTS = \
 	tests/integration/basic-insert.sh \
+	tests/integration/basic-insert-no-compress.sh \
 	tests/integration/custom-delimiter.sh \
+	tests/integration/custom-delimiter-no-compress.sh \
 	tests/integration/no-data-with-keys.sh \
 	tests/integration/random-keys.sh \
 	tests/integration/random-keys-not-found.sh \
 	tests/integration/very-long-data.sh \
+	tests/integration/very-long-data-no-compress.sh \
 	tests/integration/very-many-keys.sh \
+	tests/integration/very-many-keys-no-compress.sh \
 	tests/integration/querying-bad-file.sh \
 	$(NULL)
 
