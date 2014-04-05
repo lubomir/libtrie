@@ -33,8 +33,7 @@ This utility is used to compile the original file into a trie and serialize it.
 The input file should be a text file with unix line endings and two columns
 delimited by any byte. The delimiter can be specified via `-d` command line
 argument. The other available option is `-e`. This signifies that no data will
-be associated with the keys. There can still be the delimiter after the key or
-even some data. It will be ignored.
+be associated with the keys. Whole line will be stored in the trie as a key.
 
 The arguments can be reviewed by running the utility with `-h` option.
 
