@@ -35,6 +35,10 @@ delimited by any byte. The delimiter can be specified via `-d` command line
 argument. The other available option is `-e`. This signifies that no data will
 be associated with the keys. Whole line will be stored in the trie as a key.
 
+The library by default tries to compress the data. This works by not storing
+the common prefix with a key and only storing its length. This works very well
+for morphological data. It can be disabled with `-u` argument.
+
 The arguments can be reviewed by running the utility with `-h` option.
 
 If you pass `-` as input filename, the data will be read from standard input.
